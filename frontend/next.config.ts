@@ -30,6 +30,15 @@ const GATEWAY_REST_BASE =
 const config = {
   devIndicators: false,
 
+  // ── Server binding hardening ───────────────────────────────────────────────
+  // Bind to loopback only; prevents exposure on LAN/public interfaces.
+  // Override with NEXT_PUBLIC_APP_HOST=0.0.0.0 only when explicitly needed.
+  hostname: process.env.NEXT_PUBLIC_APP_HOST ?? "127.0.0.1",
+
+  // Disable host-header origin fallback to prevent host-header injection.
+  // Requests with unexpected Host headers will be rejected.
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
+
   // ── Reverse proxy rewrites ─────────────────────────────────────────────────
   async rewrites() {
     return [

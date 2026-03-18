@@ -18,8 +18,33 @@ __pycache__/
 .venv
 venv/
 
-# Environment variables
+# Environment variables — NEVER commit secrets
 .env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+*.env
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+nvapi-*
+sk-*
+
+# Next.js build artifacts
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Python build artifacts
+dist/
+build/
+*.egg-info/
 
 # Configuration files
 config.yaml

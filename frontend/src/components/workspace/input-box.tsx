@@ -71,6 +71,7 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "../ai-elements/model-selector";
+import { ProviderSelectorGate } from "../ai-elements/provider-selector-gate";
 import { Suggestion, Suggestions } from "../ai-elements/suggestion";
 import {
   DropdownMenu,
@@ -696,6 +697,7 @@ export function InputBox({
           )}
         </PromptInputTools>
         <PromptInputTools>
+          <ProviderSelectorGate>
           <ModelSelector
             open={modelDialogOpen}
             onOpenChange={setModelDialogOpen}
@@ -727,6 +729,7 @@ export function InputBox({
               </ModelSelectorList>
             </ModelSelectorContent>
           </ModelSelector>
+          </ProviderSelectorGate>
           <PromptInputSubmit
             className="rounded-full"
             disabled={disabled}

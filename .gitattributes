@@ -26,6 +26,12 @@ Makefile text eol=lf
 *.bat text eol=crlf
 *.cmd text eol=crlf
 
+# Secrets — mark as export-ignore so they are never bundled in archives
+.env export-ignore
+.env.local export-ignore
+.env.*.local export-ignore
+.env.production export-ignore
+
 # Binary assets
 *.png binary
 *.jpg binary

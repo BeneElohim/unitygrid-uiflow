@@ -109,7 +109,7 @@ export function WorkspaceNavMenu() {
                     </DropdownMenuItem>
                   </a>
                   <a
-                    href="https://github.com/bytedance/unitygrid"
+                    href="https://github.com/BeneElohim/unitygrid-uiflow"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -120,7 +120,7 @@ export function WorkspaceNavMenu() {
                   </a>
                   <DropdownMenuSeparator />
                   <a
-                    href="https://github.com/bytedance/unitygrid/issues"
+                    href="https://github.com/BeneElohim/unitygrid-uiflow/issues"
                     target="_blank"
                     rel="noopener noreferrer"
                   >

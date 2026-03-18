@@ -1,0 +1,99 @@
+// UnityGrid Agent Flow — OpenClaw Gateway Config
+// ─────────────────────────────────────────────────
+// Runtime: Node ≥ 22  |  openclaw v2026.3.x
+//
+// Start:  source .env.unitygrid && openclaw gateway --config configs/unitygrid.gateway.json5
+//
+// Env vars required (see .env.unitygrid):
+//   UG_GATEWAY_TOKEN, NEMO_API_BASE, NEMO_API_KEY, NEMO_MODEL
+// Env vars optional (BYO routes):
+//   OPENROUTER_API_KEY, OPENROUTER_MODEL
+{
+  // ── Gateway server ─────────────────────────────────────────────────────────
+  gateway: {
+    host: "127.0.0.1",
+    port: 8765,
+
+    // Auth — token-based, required even on loopback
+    auth: {
+      mode: "token",
+      token: "${UG_GATEWAY_TOKEN}",
+    },
+
+    // Control UI — served at /control, proxied from UnityGrid UI on :8502
+    controlUi: {
+      basePath: "/control",
+      // Allow the UnityGrid UI origin to connect
+      allowedOrigins: [
+        "http://localhost:8502",
+        "http://127.0.0.1:8502",
+      ],
+      // Allow insecure auth for local loopback dev
+      allowInsecureAuth: true,
+    },
+
+    // Hot-reload in hybrid mode (no downtime for most changes)
+    reload: { mode: "hybrid", debounceMs: 300 },
+  },
+
+  // ── Agent workspace ────────────────────────────────────────────────────────
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/workspace-unitygrid",
+      // Session pruning: keep last 7 days
+      session: { pruneAfter: "7d" },
+    },
+  },
+
+  // ── Models — NIM as sovereign default ─────────────────────────────────────
+  models: {
+    default: "nemo",
+    providers: {
+      nemo: {
+        kind: "openai-compatible",
+        baseUrl: "${NEMO_API_BASE}",
+        apiKey: "${NEMO_API_KEY}",
+        model: "${NEMO_MODEL}",
+        // Extra headers for UnityGrid audit trail
+        headers: {
+          "X-UnityGrid-Source": "OpenClaw-Gateway",
+        },
+      },
+      // Optional BYO route — only active when OPENROUTER_API_KEY is set
+      openrouter: {
+        kind: "openai-compatible",
+        baseUrl: "https://openrouter.ai/api/v1",
+        apiKey: "${OPENROUTER_API_KEY}",
+        model: "${OPENROUTER_MODEL}",
+      },
+    },
+    // Model failover: if nemo returns 5xx, try openrouter (when key is set)
+    failover: {
+      enabled: true,
+      order: ["nemo", "openrouter"],
+      on: ["5xx", "timeout"],
+    },
+  },
+
+  // ── Chat routing ───────────────────────────────────────────────────────────
+  routes: {
+    chat: {
+      stream: true,
+      timeoutSec: 120,
+    },
+  },
+
+  // ── WebChat channel (disabled — we use our own UI) ─────────────────────────
+  channels: {
+    webchat: {
+      enabled: false,
+    },
+  },
+
+  // ── Security ───────────────────────────────────────────────────────────────
+  logging: {
+    // Redact all secret patterns from logs
+    redactSecrets: true,
+    level: "info",
+  },
+}

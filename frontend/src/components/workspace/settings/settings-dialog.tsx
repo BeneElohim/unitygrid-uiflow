@@ -5,6 +5,7 @@ import {
   InfoIcon,
   BrainIcon,
   PaletteIcon,
+  ShieldCheck,
   SparklesIcon,
   WrenchIcon,
 } from "lucide-react";
@@ -23,6 +24,7 @@ import { MemorySettingsPage } from "@/components/workspace/settings/memory-setti
 import { NotificationSettingsPage } from "@/components/workspace/settings/notification-settings-page";
 import { SkillSettingsPage } from "@/components/workspace/settings/skill-settings-page";
 import { ToolSettingsPage } from "@/components/workspace/settings/tool-settings-page";
+import { GatewaySettingsPage } from "@/components/workspace/settings/gateway-settings-page";
 import { useI18n } from "@/core/i18n/hooks";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,7 @@ type SettingsSection =
   | "tools"
   | "skills"
   | "notification"
+  | "gateway"
   | "about";
 
 type SettingsDialogProps = React.ComponentProps<typeof Dialog> & {
@@ -71,6 +74,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
       },
       { id: "tools", label: t.settings.sections.tools, icon: WrenchIcon },
       { id: "skills", label: t.settings.sections.skills, icon: SparklesIcon },
+      { id: "gateway", label: "Gateway", icon: ShieldCheck },
       { id: "about", label: t.settings.sections.about, icon: InfoIcon },
     ],
     [
@@ -133,6 +137,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 />
               )}
               {activeSection === "notification" && <NotificationSettingsPage />}
+              {activeSection === "gateway" && <GatewaySettingsPage />}
               {activeSection === "about" && <AboutSettingsPage />}
             </div>
           </ScrollArea>

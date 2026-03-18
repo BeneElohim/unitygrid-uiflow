@@ -1,11 +1,12 @@
 "use client";
 
-import { BotIcon, MessagesSquare } from "lucide-react";
+import { BotIcon, MessagesSquare, ShieldCheck, Terminal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,6 +19,7 @@ export function WorkspaceNavChatList() {
   return (
     <SidebarGroup className="pt-1">
       <SidebarMenu>
+        {/* ── Standard workspace nav ────────────────────────────────────── */}
         <SidebarMenuItem>
           <SidebarMenuButton isActive={pathname === "/workspace/chats"} asChild>
             <Link className="text-muted-foreground" href="/workspace/chats">
@@ -34,6 +36,36 @@ export function WorkspaceNavChatList() {
             <Link className="text-muted-foreground" href="/workspace/agents">
               <BotIcon />
               <span>{t.sidebar.agents}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+
+        {/* ── OpenClaw Gateway nav ──────────────────────────────────────── */}
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={pathname.startsWith("/workspace/gateway/chat")}
+            asChild
+          >
+            <Link
+              className="text-muted-foreground"
+              href="/workspace/gateway/chat"
+            >
+              <Terminal />
+              <span>Gateway Chat</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            isActive={pathname.startsWith("/workspace/gateway/control")}
+            asChild
+          >
+            <Link
+              className="text-muted-foreground"
+              href="/workspace/gateway/control"
+            >
+              <ShieldCheck />
+              <span>Gateway Control</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

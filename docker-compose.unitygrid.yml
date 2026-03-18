@@ -1,0 +1,93 @@
+# UnityGrid Agent Flow — Docker Compose
+# ─────────────────────────────────────────────────────────────────────────────
+# Services:
+#   unitygrid-ui      — Next.js frontend on :8502
+#   openclaw-gateway  — OpenClaw Gateway on :8765 (internal only)
+#
+# Usage:
+#   cp openclaw/.env.unitygrid.example openclaw/.env.unitygrid
+#   # Fill in .env.unitygrid with real keys
+#   docker compose -f docker-compose.unitygrid.yml --env-file openclaw/.env.unitygrid up
+#
+# The UI proxies /control and /gw to the Gateway via its Next.js rewrites.
+# The Gateway is NOT exposed to the host network — only the UI is.
+
+version: "3.9"
+
+networks:
+  unitygrid-net:
+    driver: bridge
+
+services:
+  # ── OpenClaw Gateway ─────────────────────────────────────────────────────
+  openclaw-gateway:
+    image: node:22-alpine
+    container_name: ug-openclaw-gateway
+    working_dir: /app
+    networks:
+      - unitygrid-net
+    # Internal only — NOT exposed to host
+    expose:
+      - "8765"
+    environment:
+      UG_GATEWAY_TOKEN: "${UG_GATEWAY_TOKEN}"
+      NEMO_API_BASE: "${NEMO_API_BASE}"
+      NEMO_API_KEY: "${NEMO_API_KEY}"
+      NEMO_MODEL: "${NEMO_MODEL}"
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
+      OPENROUTER_MODEL: "${OPENROUTER_MODEL:-}"
+    volumes:
+      - ./openclaw:/app/openclaw:ro
+      - openclaw-workspace:/root/.openclaw
+    command: >
+      sh -c "
+        npm install -g openclaw@2026.3.13 --quiet &&
+        openclaw gateway --config /app/openclaw/configs/unitygrid.gateway.json5
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8765/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ── UnityGrid UI ──────────────────────────────────────────────────────────
+  unitygrid-ui:
+    image: node:22-alpine
+    container_name: ug-frontend
+    working_dir: /app/frontend
+    networks:
+      - unitygrid-net
+    ports:
+      - "8502:8502"
+    depends_on:
+      openclaw-gateway:
+        condition: service_healthy
+    environment:
+      # Provider lock — NIM via OpenClaw Gateway
+      PROVIDER_LOCK: "NIM"
+      PROVIDERS_ENABLED: "NIM"
+      MODEL_ID: "${NEMO_MODEL:-nvidia/nemotron-70b-instruct}"
+      # OpenClaw Gateway connection (internal Docker network)
+      OPENCLAW_GATEWAY_URL: "http://openclaw-gateway:8765"
+      OPENCLAW_GATEWAY_WS_URL: "ws://openclaw-gateway:8765"
+      UG_GATEWAY_TOKEN: "${UG_GATEWAY_TOKEN}"
+      # Next.js
+      PORT: "8502"
+      NODE_ENV: "production"
+    volumes:
+      - ./frontend:/app/frontend:ro
+      - frontend-node-modules:/app/frontend/node_modules
+    command: >
+      sh -c "
+        cd /app/frontend &&
+        npm install --quiet &&
+        npm run build &&
+        npm start -- --port 8502
+      "
+    restart: unless-stopped
+
+volumes:
+  openclaw-workspace:
+  frontend-node-modules:

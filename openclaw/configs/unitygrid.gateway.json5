@@ -1,6 +1,7 @@
 // UnityGrid Agent Flow — OpenClaw Gateway Config
+// HARDENED 2026-03-18 — Control Plane Hardening v1.0
 // ─────────────────────────────────────────────────
-// Runtime: Node ≥ 22  |  openclaw v2026.3.x
+// Runtime: Node >= 22  |  openclaw v2026.3.x
 //
 // Start:  source .env.unitygrid && openclaw gateway --config configs/unitygrid.gateway.json5
 //
@@ -9,34 +10,54 @@
 // Env vars optional (BYO routes):
 //   OPENROUTER_API_KEY, OPENROUTER_MODEL
 {
-  // ── Gateway server ─────────────────────────────────────────────────────────
+  // -- Gateway server -----------------------------------------------------------
   gateway: {
     host: "127.0.0.1",
-    port: 8765,
+    port: 3333,
 
-    // Auth — token-based, required even on loopback
+    // Auth -- token-based, required even on loopback
     auth: {
       mode: "token",
       token: "${UG_GATEWAY_TOKEN}",
+      // HARDENED: disable insecure auth -- token required on all requests
+      allowInsecureAuth: false,
     },
 
-    // Control UI — served at /control, proxied from UnityGrid UI on :8502
+    // Control UI -- served at /control, proxied from UnityGrid UI on :8502
     controlUi: {
       basePath: "/control",
-      // Allow the UnityGrid UI origin to connect
+      // HARDENED: explicit allowedOrigins only -- no wildcards, no fallback
       allowedOrigins: [
         "http://localhost:8502",
         "http://127.0.0.1:8502",
       ],
-      // Allow insecure auth for local loopback dev
-      allowInsecureAuth: true,
+      // HARDENED: disable host-header origin fallback
+      dangerouslyAllowHostHeaderOriginFallback: false,
+      // HARDENED: disable insecure auth on control UI
+      allowInsecureAuth: false,
+    },
+
+    // HARDENED: CORS -- explicit origins only
+    cors: {
+      allowedOrigins: [
+        "http://localhost:8502",
+        "http://127.0.0.1:8502",
+      ],
+      allowCredentials: false,
+    },
+
+    // HARDENED: Rate limiting to prevent abuse
+    rateLimit: {
+      enabled: true,
+      windowMs: 60000,
+      maxRequests: 120,
     },
 
     // Hot-reload in hybrid mode (no downtime for most changes)
     reload: { mode: "hybrid", debounceMs: 300 },
   },
 
-  // ── Agent workspace ────────────────────────────────────────────────────────
+  // -- Agent workspace ----------------------------------------------------------
   agents: {
     defaults: {
       workspace: "~/.openclaw/workspace-unitygrid",
@@ -45,7 +66,7 @@
     },
   },
 
-  // ── Models — NIM as sovereign default ─────────────────────────────────────
+  // -- Models -- NIM as sovereign default ---------------------------------------
   models: {
     default: "nemo",
     providers: {
@@ -57,9 +78,10 @@
         // Extra headers for UnityGrid audit trail
         headers: {
           "X-UnityGrid-Source": "OpenClaw-Gateway",
+          "X-UnityGrid-Hardened": "2026-03-18",
         },
       },
-      // Optional BYO route — only active when OPENROUTER_API_KEY is set
+      // Optional BYO route -- only active when OPENROUTER_API_KEY is set
       openrouter: {
         kind: "openai-compatible",
         baseUrl: "https://openrouter.ai/api/v1",
@@ -75,7 +97,7 @@
     },
   },
 
-  // ── Chat routing ───────────────────────────────────────────────────────────
+  // -- Chat routing -------------------------------------------------------------
   routes: {
     chat: {
       stream: true,
@@ -83,17 +105,23 @@
     },
   },
 
-  // ── WebChat channel (disabled — we use our own UI) ─────────────────────────
+  // -- WebChat channel (disabled -- we use our own UI) --------------------------
   channels: {
     webchat: {
       enabled: false,
     },
   },
 
-  // ── Security ───────────────────────────────────────────────────────────────
+  // -- Security and audit logging -----------------------------------------------
   logging: {
     // Redact all secret patterns from logs
     redactSecrets: true,
     level: "info",
+    // HARDENED: audit log for access control events
+    audit: {
+      enabled: true,
+      logFile: "~/.openclaw/audit-unitygrid.log",
+      events: ["auth.success", "auth.failure", "origin.blocked", "rateLimit.exceeded"],
+    },
   },
 }

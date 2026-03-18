@@ -607,8 +607,12 @@ function SidebarMenuSkeleton({
   showIcon?: boolean;
 }) {
   // Random width between 50 to 90%.
-  const width = React.useMemo(() => {
-    return `${Math.floor(Math.random() * 40) + 50}%`;
+  // Uses useState + useEffect instead of useMemo to prevent SSR/client hydration
+  // mismatch: server always renders the stable default "60%"; the client
+  // randomises after mount so both trees match on first render.
+  const [width, setWidth] = React.useState("60%");
+  React.useEffect(() => {
+    setWidth(`${Math.floor(Math.random() * 40) + 50}%`);
   }, []);
 
   return (

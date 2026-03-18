@@ -39,16 +39,16 @@ export interface GatewayRestClient {
  */
 export function getGatewayClient(opts?: { url?: string }): GatewayRestClient {
   const base =
-    opts?.url ??
-    (typeof window !== "undefined"
-      ? localStorage.getItem("ug_gateway_url") ?? ""
-      : "") ||
+    (opts?.url ??
+      (typeof window !== "undefined"
+        ? (localStorage.getItem("ug_gateway_url") ?? "")
+        : "")) ||
     process.env.NEXT_PUBLIC_OPENCLAW_BASE ||
     "http://localhost:3333";
 
   const token =
     (typeof window !== "undefined"
-      ? localStorage.getItem("ug_gateway_token") ?? ""
+      ? (localStorage.getItem("ug_gateway_token") ?? "")
       : "") ||
     process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ||
     "";
@@ -130,12 +130,11 @@ export class OpenClawGatewayClient {
         ? process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_WS_URL
         : `${wsOrigin}/gw`);
     this.token =
-      opts?.token ??
-      (typeof window !== "undefined"
-        ? localStorage.getItem("ug_gateway_token") ?? ""
-        : "") ||
-      process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ??
-      "";
+      (opts?.token ??
+        (typeof window !== "undefined"
+          ? (localStorage.getItem("ug_gateway_token") ?? "")
+          : "")) ||
+      (process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ?? "");
     this.sessionKey = opts?.sessionKey ?? DEFAULT_SESSION_KEY;
   }
 

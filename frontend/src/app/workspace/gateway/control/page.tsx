@@ -11,6 +11,11 @@
  *
  * Auth token is passed via the URL fragment (#token=...) which is never
  * sent to the server — safe per OpenClaw security model.
+ *
+ * Hydration note: GATEWAY_TOKEN and controlUrl are computed client-side
+ * only (inside useEffect) to prevent SSR/client mismatch. The iframe
+ * renders with src="/control" on both server and client until the effect
+ * runs, then updates to include the token fragment on the client.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -18,20 +23,21 @@ import { ExternalLink, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-const GATEWAY_TOKEN =
-  typeof window !== "undefined"
-    ? (process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ?? "")
-    : "";
-
 export default function GatewayControlPage() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
   const [key, setKey] = useState(0); // increment to force reload
 
-  // Build the Control UI URL — token in fragment so it's never sent to server
-  const controlUrl = GATEWAY_TOKEN
-    ? `/control#token=${encodeURIComponent(GATEWAY_TOKEN)}`
-    : "/control";
+  // controlUrl starts as the safe SSR default and is updated client-side
+  // after mount to include the token fragment — prevents hydration mismatch.
+  const [controlUrl, setControlUrl] = useState("/control");
+
+  useEffect(() => {
+    const token = process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ?? "";
+    setControlUrl(
+      token ? `/control#token=${encodeURIComponent(token)}` : "/control",
+    );
+  }, []);
 
   const handleReload = () => {
     setLoading(true);
@@ -39,7 +45,9 @@ export default function GatewayControlPage() {
   };
 
   const handleOpenExternal = () => {
-    window.open(controlUrl, "_blank", "noopener,noreferrer");
+    if (typeof window !== "undefined") {
+      window.open(controlUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -93,6 +101,9 @@ export default function GatewayControlPage() {
           title="OpenClaw Control UI"
           onLoad={() => setLoading(false)}
           onError={() => setLoading(false)}
+          // suppressHydrationWarning prevents React from complaining about
+          // the src attribute changing from "/control" (SSR) to the token URL (client)
+          suppressHydrationWarning
           // Allow same-origin scripts and forms
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         />

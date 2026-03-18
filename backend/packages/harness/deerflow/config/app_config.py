@@ -7,17 +7,17 @@ import yaml
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, Field
 
-from deerflow.config.checkpointer_config import CheckpointerConfig, load_checkpointer_config_from_dict
-from deerflow.config.extensions_config import ExtensionsConfig
-from deerflow.config.memory_config import load_memory_config_from_dict
-from deerflow.config.model_config import ModelConfig
-from deerflow.config.sandbox_config import SandboxConfig
-from deerflow.config.skills_config import SkillsConfig
-from deerflow.config.subagents_config import load_subagents_config_from_dict
-from deerflow.config.summarization_config import load_summarization_config_from_dict
-from deerflow.config.title_config import load_title_config_from_dict
-from deerflow.config.tool_config import ToolConfig, ToolGroupConfig
-from deerflow.config.tool_search_config import ToolSearchConfig, load_tool_search_config_from_dict
+from unitygrid.config.checkpointer_config import CheckpointerConfig, load_checkpointer_config_from_dict
+from unitygrid.config.extensions_config import ExtensionsConfig
+from unitygrid.config.memory_config import load_memory_config_from_dict
+from unitygrid.config.model_config import ModelConfig
+from unitygrid.config.sandbox_config import SandboxConfig
+from unitygrid.config.skills_config import SkillsConfig
+from unitygrid.config.subagents_config import load_subagents_config_from_dict
+from unitygrid.config.summarization_config import load_summarization_config_from_dict
+from unitygrid.config.title_config import load_title_config_from_dict
+from unitygrid.config.tool_config import ToolConfig, ToolGroupConfig
+from unitygrid.config.tool_search_config import ToolSearchConfig, load_tool_search_config_from_dict
 
 load_dotenv()
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class AppConfig(BaseModel):
-    """Config for the DeerFlow application"""
+    """Config for the UnityGrid application"""
 
     models: list[ModelConfig] = Field(default_factory=list, description="Available models")
     sandbox: SandboxConfig = Field(description="Sandbox configuration")
@@ -227,7 +227,7 @@ _app_config: AppConfig | None = None
 
 
 def get_app_config() -> AppConfig:
-    """Get the DeerFlow config instance.
+    """Get the UnityGrid config instance.
 
     Returns a cached singleton instance. Use `reload_app_config()` to reload
     from file, or `reset_app_config()` to clear the cache.

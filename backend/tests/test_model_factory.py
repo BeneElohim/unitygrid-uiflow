@@ -1,14 +1,14 @@
-"""Tests for deerflow.models.factory.create_chat_model."""
+"""Tests for unitygrid.models.factory.create_chat_model."""
 
 from __future__ import annotations
 
 import pytest
 from langchain.chat_models import BaseChatModel
 
-from deerflow.config.app_config import AppConfig
-from deerflow.config.model_config import ModelConfig
-from deerflow.config.sandbox_config import SandboxConfig
-from deerflow.models import factory as factory_module
+from unitygrid.config.app_config import AppConfig
+from unitygrid.config.model_config import ModelConfig
+from unitygrid.config.sandbox_config import SandboxConfig
+from unitygrid.models import factory as factory_module
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -18,7 +18,7 @@ from deerflow.models import factory as factory_module
 def _make_app_config(models: list[ModelConfig]) -> AppConfig:
     return AppConfig(
         models=models,
-        sandbox=SandboxConfig(use="deerflow.sandbox.local:LocalSandboxProvider"),
+        sandbox=SandboxConfig(use="unitygrid.sandbox.local:LocalSandboxProvider"),
     )
 
 

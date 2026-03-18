@@ -20,10 +20,10 @@ import threading
 import time
 import uuid
 
-from deerflow.config import get_app_config
-from deerflow.config.paths import VIRTUAL_PATH_PREFIX, Paths, get_paths
-from deerflow.sandbox.sandbox import Sandbox
-from deerflow.sandbox.sandbox_provider import SandboxProvider
+from unitygrid.config import get_app_config
+from unitygrid.config.paths import VIRTUAL_PATH_PREFIX, Paths, get_paths
+from unitygrid.sandbox.sandbox import Sandbox
+from unitygrid.sandbox.sandbox_provider import SandboxProvider
 
 from .aio_sandbox import AioSandbox
 from .backend import SandboxBackend, wait_for_sandbox_ready
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 # Default configuration
 DEFAULT_IMAGE = "enterprise-public-cn-beijing.cr.volces.com/vefaas-public/all-in-one-sandbox:latest"
 DEFAULT_PORT = 8080
-DEFAULT_CONTAINER_PREFIX = "deer-flow-sandbox"
+DEFAULT_CONTAINER_PREFIX = "unitygrid-sandbox"
 DEFAULT_IDLE_TIMEOUT = 600  # 10 minutes in seconds
 DEFAULT_REPLICAS = 3  # Maximum concurrent sandbox containers
 IDLE_CHECK_INTERVAL = 60  # Check every 60 seconds
@@ -51,10 +51,10 @@ class AioSandboxProvider(SandboxProvider):
         - Remote/K8s mode (connect to pre-existing sandbox URL)
 
     Configuration options in config.yaml under sandbox:
-        use: deerflow.community.aio_sandbox:AioSandboxProvider
+        use: unitygrid.community.aio_sandbox:AioSandboxProvider
         image: <container image>
         port: 8080                      # Base port for local containers
-        container_prefix: deer-flow-sandbox
+        container_prefix: unitygrid-sandbox
         idle_timeout: 600               # Idle timeout in seconds (0 to disable)
         replicas: 3                     # Max concurrent sandbox containers (LRU eviction when exceeded)
         mounts:                         # Volume mounts for local containers

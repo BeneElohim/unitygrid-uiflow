@@ -10,10 +10,10 @@ from langchain.tools import InjectedToolCallId, ToolRuntime, tool
 from langgraph.config import get_stream_writer
 from langgraph.typing import ContextT
 
-from deerflow.agents.lead_agent.prompt import get_skills_prompt_section
-from deerflow.agents.thread_state import ThreadState
-from deerflow.subagents import SubagentExecutor, get_subagent_config
-from deerflow.subagents.executor import SubagentStatus, cleanup_background_task, get_background_task_result
+from unitygrid.agents.lead_agent.prompt import get_skills_prompt_section
+from unitygrid.agents.thread_state import ThreadState
+from unitygrid.subagents import SubagentExecutor, get_subagent_config
+from unitygrid.subagents.executor import SubagentStatus, cleanup_background_task, get_background_task_result
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ def task_tool(
 
     # Get available tools (excluding task tool to prevent nesting)
     # Lazy import to avoid circular dependency
-    from deerflow.tools import get_available_tools
+    from unitygrid.tools import get_available_tools
 
     # Subagents should not have subagent tools enabled (prevent recursive nesting)
     tools = get_available_tools(model_name=parent_model, subagent_enabled=False)

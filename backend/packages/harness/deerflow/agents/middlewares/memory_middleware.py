@@ -7,8 +7,8 @@ from langchain.agents import AgentState
 from langchain.agents.middleware import AgentMiddleware
 from langgraph.runtime import Runtime
 
-from deerflow.agents.memory.queue import get_memory_queue
-from deerflow.config.memory_config import get_memory_config
+from unitygrid.agents.memory.queue import get_memory_queue
+from unitygrid.config.memory_config import get_memory_config
 
 
 class MemoryMiddlewareState(AgentState):

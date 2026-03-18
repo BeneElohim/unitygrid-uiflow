@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from deerflow.config.memory_config import get_memory_config
+from unitygrid.config.memory_config import get_memory_config
 
 
 @dataclass
@@ -84,7 +84,7 @@ class MemoryUpdateQueue:
     def _process_queue(self) -> None:
         """Process all queued conversation contexts."""
         # Import here to avoid circular dependency
-        from deerflow.agents.memory.updater import MemoryUpdater
+        from unitygrid.agents.memory.updater import MemoryUpdater
 
         with self._lock:
             if self._processing:

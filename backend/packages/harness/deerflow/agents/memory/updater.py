@@ -7,13 +7,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from deerflow.agents.memory.prompt import (
+from unitygrid.agents.memory.prompt import (
     MEMORY_UPDATE_PROMPT,
     format_conversation_for_update,
 )
-from deerflow.config.memory_config import get_memory_config
-from deerflow.config.paths import get_paths
-from deerflow.models import create_chat_model
+from unitygrid.config.memory_config import get_memory_config
+from unitygrid.config.paths import get_paths
+from unitygrid.models import create_chat_model
 
 
 def _get_memory_file_path(agent_name: str | None = None) -> Path:

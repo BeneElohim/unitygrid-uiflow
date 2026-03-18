@@ -4,20 +4,20 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import SummarizationMiddleware
 from langchain_core.runnables import RunnableConfig
 
-from deerflow.agents.lead_agent.prompt import apply_prompt_template
-from deerflow.agents.middlewares.clarification_middleware import ClarificationMiddleware
-from deerflow.agents.middlewares.loop_detection_middleware import LoopDetectionMiddleware
-from deerflow.agents.middlewares.memory_middleware import MemoryMiddleware
-from deerflow.agents.middlewares.subagent_limit_middleware import SubagentLimitMiddleware
-from deerflow.agents.middlewares.title_middleware import TitleMiddleware
-from deerflow.agents.middlewares.todo_middleware import TodoMiddleware
-from deerflow.agents.middlewares.tool_error_handling_middleware import build_lead_runtime_middlewares
-from deerflow.agents.middlewares.view_image_middleware import ViewImageMiddleware
-from deerflow.agents.thread_state import ThreadState
-from deerflow.config.agents_config import load_agent_config
-from deerflow.config.app_config import get_app_config
-from deerflow.config.summarization_config import get_summarization_config
-from deerflow.models import create_chat_model
+from unitygrid.agents.lead_agent.prompt import apply_prompt_template
+from unitygrid.agents.middlewares.clarification_middleware import ClarificationMiddleware
+from unitygrid.agents.middlewares.loop_detection_middleware import LoopDetectionMiddleware
+from unitygrid.agents.middlewares.memory_middleware import MemoryMiddleware
+from unitygrid.agents.middlewares.subagent_limit_middleware import SubagentLimitMiddleware
+from unitygrid.agents.middlewares.title_middleware import TitleMiddleware
+from unitygrid.agents.middlewares.todo_middleware import TodoMiddleware
+from unitygrid.agents.middlewares.tool_error_handling_middleware import build_lead_runtime_middlewares
+from unitygrid.agents.middlewares.view_image_middleware import ViewImageMiddleware
+from unitygrid.agents.thread_state import ThreadState
+from unitygrid.config.agents_config import load_agent_config
+from unitygrid.config.app_config import get_app_config
+from unitygrid.config.summarization_config import get_summarization_config
+from unitygrid.models import create_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def _create_todo_list_middleware(is_plan_mode: bool) -> TodoMiddleware | None:
     if not is_plan_mode:
         return None
 
-    # Custom prompts matching DeerFlow's style
+    # Custom prompts matching UnityGrid's style
     system_prompt = """
 <todo_list_system>
 You have access to the `write_todos` tool to help you manage and track complex multi-step objectives.
@@ -242,7 +242,7 @@ def _build_middlewares(config: RunnableConfig, model_name: str | None, agent_nam
 
     # Add DeferredToolFilterMiddleware to hide deferred tool schemas from model binding
     if app_config.tool_search.enabled:
-        from deerflow.agents.middlewares.deferred_tool_filter_middleware import DeferredToolFilterMiddleware
+        from unitygrid.agents.middlewares.deferred_tool_filter_middleware import DeferredToolFilterMiddleware
         middlewares.append(DeferredToolFilterMiddleware())
 
     # Add SubagentLimitMiddleware to truncate excess parallel task calls
@@ -261,8 +261,8 @@ def _build_middlewares(config: RunnableConfig, model_name: str | None, agent_nam
 
 def make_lead_agent(config: RunnableConfig):
     # Lazy import to avoid circular dependency
-    from deerflow.tools import get_available_tools
-    from deerflow.tools.builtins import setup_agent
+    from unitygrid.tools import get_available_tools
+    from unitygrid.tools.builtins import setup_agent
 
     cfg = config.get("configurable", {})
 

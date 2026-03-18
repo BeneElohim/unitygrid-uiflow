@@ -12,11 +12,13 @@ from app.gateway.routers import (
     mcp,
     memory,
     models,
+    receipts,
     skills,
     suggestions,
     uploads,
 )
-from deerflow.config.app_config import get_app_config
+from unitygrid.config.app_config import get_app_config
+from deerflow.community.nvidia_nim import pop_receipt_bus
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +44,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         raise RuntimeError(error_msg) from e
     config = get_gateway_config()
     logger.info(f"Starting API Gateway on {config.host}:{config.port}")
+    # Register the running event loop with the POP-LL-3.0 receipt bus
+    import asyncio as _asyncio
+    pop_receipt_bus.set_event_loop(_asyncio.get_event_loop())
+    logger.info("POP-LL-3.0 receipt bus initialised")
 
     # NOTE: MCP tools initialization is NOT done here because:
     # 1. Gateway doesn't use MCP tools - they are used by Agents in the LangGraph Server
@@ -77,11 +83,11 @@ def create_app() -> FastAPI:
     """
 
     app = FastAPI(
-        title="DeerFlow API Gateway",
+        title="UnityGrid API Gateway",
         description="""
-## DeerFlow API Gateway
+## UnityGrid API Gateway
 
-API Gateway for DeerFlow - A LangGraph-based AI agent backend with sandbox execution capabilities.
+API Gateway for UnityGrid - A LangGraph-based AI agent backend with sandbox execution capabilities.
 
 ### Features
 
@@ -176,6 +182,9 @@ This gateway provides custom endpoints for models, MCP configuration, skills, an
     # Channels API is mounted at /api/channels
     app.include_router(channels.router)
 
+    # POP-LL-3.0 Receipts SSE stream at /api/receipts
+    app.include_router(receipts.router)
+
     @app.get("/health", tags=["health"])
     async def health_check() -> dict:
         """Health check endpoint.
@@ -183,7 +192,7 @@ This gateway provides custom endpoints for models, MCP configuration, skills, an
         Returns:
             Service health status information.
         """
-        return {"status": "healthy", "service": "deer-flow-gateway"}
+        return {"status": "healthy", "service": "unitygrid-gateway"}
 
     return app
 

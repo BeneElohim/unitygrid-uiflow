@@ -10,7 +10,7 @@ _SAFE_THREAD_ID_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
 
 class Paths:
     """
-    Centralized path configuration for DeerFlow application data.
+    Centralized path configuration for UnityGrid application data.
 
     Directory layout (host side):
         {base_dir}/
@@ -31,8 +31,8 @@ class Paths:
     BaseDir resolution (in priority order):
         1. Constructor argument `base_dir`
         2. DEER_FLOW_HOME environment variable
-        3. Local dev fallback: cwd/.deer-flow  (when cwd is the backend/ dir)
-        4. Default: $HOME/.deer-flow
+        3. Local dev fallback: cwd/.unitygrid  (when cwd is the backend/ dir)
+        4. Default: $HOME/.unitygrid
     """
 
     def __init__(self, base_dir: str | Path | None = None) -> None:
@@ -64,9 +64,9 @@ class Paths:
 
         cwd = Path.cwd()
         if cwd.name == "backend" or (cwd / "pyproject.toml").exists():
-            return cwd / ".deer-flow"
+            return cwd / ".unitygrid"
 
-        return Path.home() / ".deer-flow"
+        return Path.home() / ".unitygrid"
 
     @property
     def memory_file(self) -> Path:

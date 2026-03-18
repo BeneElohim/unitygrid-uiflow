@@ -10,7 +10,7 @@ import logging
 import os
 import subprocess
 
-from deerflow.utils.network import get_free_port, release_port
+from unitygrid.utils.network import get_free_port, release_port
 
 from .backend import SandboxBackend, wait_for_sandbox_ready
 from .sandbox_info import SandboxInfo
@@ -45,7 +45,7 @@ class LocalContainerBackend(SandboxBackend):
         Args:
             image: Container image to use.
             base_port: Base port number to start searching for free ports.
-            container_prefix: Prefix for container names (e.g., "deer-flow-sandbox").
+            container_prefix: Prefix for container names (e.g., "unitygrid-sandbox").
             config_mounts: Volume mount configurations from config (list of VolumeMountConfig).
             environment: Environment variables to inject into containers.
         """

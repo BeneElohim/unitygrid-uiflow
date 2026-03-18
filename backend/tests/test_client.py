@@ -1,4 +1,4 @@
-"""Tests for DeerFlowClient."""
+"""Tests for UnityGridClient."""
 
 import asyncio
 import concurrent.futures
@@ -16,7 +16,7 @@ from app.gateway.routers.memory import MemoryConfigResponse, MemoryStatusRespons
 from app.gateway.routers.models import ModelResponse, ModelsListResponse
 from app.gateway.routers.skills import SkillInstallResponse, SkillResponse, SkillsListResponse
 from app.gateway.routers.uploads import UploadResponse
-from deerflow.client import DeerFlowClient
+from unitygrid.client import UnityGridClient
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -39,9 +39,9 @@ def mock_app_config():
 
 @pytest.fixture
 def client(mock_app_config):
-    """Create a DeerFlowClient with mocked config loading."""
-    with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-        return DeerFlowClient()
+    """Create a UnityGridClient with mocked config loading."""
+    with patch("unitygrid.client.get_app_config", return_value=mock_app_config):
+        return UnityGridClient()
 
 
 # ---------------------------------------------------------------------------
@@ -59,8 +59,8 @@ class TestClientInit:
         assert client._agent is None
 
     def test_custom_params(self, mock_app_config):
-        with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-            c = DeerFlowClient(
+        with patch("unitygrid.client.get_app_config", return_value=mock_app_config):
+            c = UnityGridClient(
                 model_name="gpt-4",
                 thinking_enabled=False,
                 subagent_enabled=True,
@@ -73,16 +73,16 @@ class TestClientInit:
 
     def test_custom_config_path(self, mock_app_config):
         with (
-            patch("deerflow.client.reload_app_config") as mock_reload,
-            patch("deerflow.client.get_app_config", return_value=mock_app_config),
+            patch("unitygrid.client.reload_app_config") as mock_reload,
+            patch("unitygrid.client.get_app_config", return_value=mock_app_config),
         ):
-            DeerFlowClient(config_path="/tmp/custom.yaml")
+            UnityGridClient(config_path="/tmp/custom.yaml")
             mock_reload.assert_called_once_with("/tmp/custom.yaml")
 
     def test_checkpointer_stored(self, mock_app_config):
         cp = MagicMock()
-        with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-            c = DeerFlowClient(checkpointer=cp)
+        with patch("unitygrid.client.get_app_config", return_value=mock_app_config):
+            c = UnityGridClient(checkpointer=cp)
         assert c._checkpointer is cp
 
 
@@ -109,7 +109,7 @@ class TestConfigQueries:
         skill.category = "public"
         skill.enabled = True
 
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]) as mock_load:
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]) as mock_load:
             result = client.list_skills()
             mock_load.assert_called_once_with(enabled_only=False)
 
@@ -124,13 +124,13 @@ class TestConfigQueries:
         }
 
     def test_list_skills_enabled_only(self, client):
-        with patch("deerflow.skills.loader.load_skills", return_value=[]) as mock_load:
+        with patch("unitygrid.skills.loader.load_skills", return_value=[]) as mock_load:
             client.list_skills(enabled_only=True)
             mock_load.assert_called_once_with(enabled_only=True)
 
     def test_get_memory(self, client):
         memory = {"version": "1.0", "facts": []}
-        with patch("deerflow.agents.memory.updater.get_memory_data", return_value=memory) as mock_mem:
+        with patch("unitygrid.agents.memory.updater.get_memory_data", return_value=memory) as mock_mem:
             result = client.get_memory()
             mock_mem.assert_called_once()
         assert result == memory
@@ -323,7 +323,7 @@ class TestChat:
 
 class TestExtractText:
     def test_string(self):
-        assert DeerFlowClient._extract_text("hello") == "hello"
+        assert UnityGridClient._extract_text("hello") == "hello"
 
     def test_list_text_blocks(self):
         content = [
@@ -331,16 +331,16 @@ class TestExtractText:
             {"type": "thinking", "thinking": "skip"},
             {"type": "text", "text": "second"},
         ]
-        assert DeerFlowClient._extract_text(content) == "first\nsecond"
+        assert UnityGridClient._extract_text(content) == "first\nsecond"
 
     def test_list_plain_strings(self):
-        assert DeerFlowClient._extract_text(["a", "b"]) == "a\nb"
+        assert UnityGridClient._extract_text(["a", "b"]) == "a\nb"
 
     def test_empty_list(self):
-        assert DeerFlowClient._extract_text([]) == ""
+        assert UnityGridClient._extract_text([]) == ""
 
     def test_other_type(self):
-        assert DeerFlowClient._extract_text(42) == "42"
+        assert UnityGridClient._extract_text(42) == "42"
 
 
 # ---------------------------------------------------------------------------
@@ -355,10 +355,10 @@ class TestEnsureAgent:
         config = client._get_runnable_config("t1")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", return_value=mock_agent),
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", return_value=mock_agent),
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
         ):
             client._ensure_agent(config)
@@ -371,12 +371,12 @@ class TestEnsureAgent:
         config = client._get_runnable_config("t1")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", return_value=mock_agent) as mock_create_agent,
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", return_value=mock_agent) as mock_create_agent,
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
-            patch("deerflow.agents.checkpointer.get_checkpointer", return_value=mock_checkpointer),
+            patch("unitygrid.agents.checkpointer.get_checkpointer", return_value=mock_checkpointer),
         ):
             client._ensure_agent(config)
 
@@ -387,12 +387,12 @@ class TestEnsureAgent:
         config = client._get_runnable_config("t1")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", return_value=mock_agent) as mock_create_agent,
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", return_value=mock_agent) as mock_create_agent,
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
-            patch("deerflow.agents.checkpointer.get_checkpointer", return_value=None),
+            patch("unitygrid.agents.checkpointer.get_checkpointer", return_value=None),
         ):
             client._ensure_agent(config)
 
@@ -452,7 +452,7 @@ class TestMcpConfig:
         ext_config = MagicMock()
         ext_config.mcp_servers = {"github": server}
 
-        with patch("deerflow.client.get_extensions_config", return_value=ext_config):
+        with patch("unitygrid.client.get_extensions_config", return_value=ext_config):
             result = client.get_mcp_config()
 
         assert "mcp_servers" in result
@@ -478,9 +478,9 @@ class TestMcpConfig:
             client._agent = MagicMock()
 
             with (
-                patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=tmp_path),
-                patch("deerflow.client.get_extensions_config", return_value=current_config),
-                patch("deerflow.client.reload_extensions_config", return_value=reloaded_config),
+                patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=tmp_path),
+                patch("unitygrid.client.get_extensions_config", return_value=current_config),
+                patch("unitygrid.client.reload_extensions_config", return_value=reloaded_config),
             ):
                 result = client.update_mcp_config({"new-server": {"enabled": True, "type": "sse"}})
 
@@ -513,13 +513,13 @@ class TestSkillsManagement:
 
     def test_get_skill_found(self, client):
         skill = self._make_skill()
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]):
             result = client.get_skill("test-skill")
         assert result is not None
         assert result["name"] == "test-skill"
 
     def test_get_skill_not_found(self, client):
-        with patch("deerflow.skills.loader.load_skills", return_value=[]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[]):
             result = client.get_skill("nonexistent")
         assert result is None
 
@@ -540,10 +540,10 @@ class TestSkillsManagement:
             client._agent = MagicMock()
 
             with (
-                patch("deerflow.skills.loader.load_skills", side_effect=[[skill], [updated_skill]]),
-                patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=tmp_path),
-                patch("deerflow.client.get_extensions_config", return_value=ext_config),
-                patch("deerflow.client.reload_extensions_config"),
+                patch("unitygrid.skills.loader.load_skills", side_effect=[[skill], [updated_skill]]),
+                patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=tmp_path),
+                patch("unitygrid.client.get_extensions_config", return_value=ext_config),
+                patch("unitygrid.client.reload_extensions_config"),
             ):
                 result = client.update_skill("test-skill", enabled=False)
             assert result["enabled"] is False
@@ -552,7 +552,7 @@ class TestSkillsManagement:
             tmp_path.unlink()
 
     def test_update_skill_not_found(self, client):
-        with patch("deerflow.skills.loader.load_skills", return_value=[]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[]):
             with pytest.raises(ValueError, match="not found"):
                 client.update_skill("nonexistent", enabled=True)
 
@@ -573,8 +573,8 @@ class TestSkillsManagement:
             (skills_root / "custom").mkdir(parents=True)
 
             with (
-                patch("deerflow.skills.loader.get_skills_root_path", return_value=skills_root),
-                patch("deerflow.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "my-skill")),
+                patch("unitygrid.skills.loader.get_skills_root_path", return_value=skills_root),
+                patch("unitygrid.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "my-skill")),
             ):
                 result = client.install_skill(archive_path)
 
@@ -604,21 +604,21 @@ class TestSkillsManagement:
 class TestMemoryManagement:
     def test_reload_memory(self, client):
         data = {"version": "1.0", "facts": []}
-        with patch("deerflow.agents.memory.updater.reload_memory_data", return_value=data):
+        with patch("unitygrid.agents.memory.updater.reload_memory_data", return_value=data):
             result = client.reload_memory()
         assert result == data
 
     def test_get_memory_config(self, client):
         config = MagicMock()
         config.enabled = True
-        config.storage_path = ".deer-flow/memory.json"
+        config.storage_path = ".unitygrid/memory.json"
         config.debounce_seconds = 30
         config.max_facts = 100
         config.fact_confidence_threshold = 0.7
         config.injection_enabled = True
         config.max_injection_tokens = 2000
 
-        with patch("deerflow.config.memory_config.get_memory_config", return_value=config):
+        with patch("unitygrid.config.memory_config.get_memory_config", return_value=config):
             result = client.get_memory_config()
 
         assert result["enabled"] is True
@@ -627,7 +627,7 @@ class TestMemoryManagement:
     def test_get_memory_status(self, client):
         config = MagicMock()
         config.enabled = True
-        config.storage_path = ".deer-flow/memory.json"
+        config.storage_path = ".unitygrid/memory.json"
         config.debounce_seconds = 30
         config.max_facts = 100
         config.fact_confidence_threshold = 0.7
@@ -637,8 +637,8 @@ class TestMemoryManagement:
         data = {"version": "1.0", "facts": []}
 
         with (
-            patch("deerflow.config.memory_config.get_memory_config", return_value=config),
-            patch("deerflow.agents.memory.updater.get_memory_data", return_value=data),
+            patch("unitygrid.config.memory_config.get_memory_config", return_value=config),
+            patch("unitygrid.agents.memory.updater.get_memory_data", return_value=data),
         ):
             result = client.get_memory_status()
 
@@ -663,7 +663,7 @@ class TestUploads:
             uploads_dir = tmp_path / "uploads"
             uploads_dir.mkdir()
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 result = client.upload_files("thread-1", [src_file])
 
             assert result["success"] is True
@@ -719,9 +719,9 @@ class TestUploads:
                 return client.upload_files("thread-async", [first, second])
 
             with (
-                patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir),
-                patch("deerflow.utils.file_conversion.CONVERTIBLE_EXTENSIONS", {".pdf"}),
-                patch("deerflow.utils.file_conversion.convert_file_to_markdown", side_effect=fake_convert),
+                patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir),
+                patch("unitygrid.utils.file_conversion.CONVERTIBLE_EXTENSIONS", {".pdf"}),
+                patch("unitygrid.utils.file_conversion.convert_file_to_markdown", side_effect=fake_convert),
                 patch("concurrent.futures.ThreadPoolExecutor", FakeExecutor),
             ):
                 result = asyncio.run(call_upload())
@@ -740,7 +740,7 @@ class TestUploads:
             (uploads_dir / "a.txt").write_text("a")
             (uploads_dir / "b.txt").write_text("bb")
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 result = client.list_uploads("thread-1")
 
             assert result["count"] == 2
@@ -756,7 +756,7 @@ class TestUploads:
             uploads_dir = Path(tmp)
             (uploads_dir / "delete-me.txt").write_text("gone")
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 result = client.delete_upload("thread-1", "delete-me.txt")
 
             assert result["success"] is True
@@ -765,14 +765,14 @@ class TestUploads:
 
     def test_delete_upload_not_found(self, client):
         with tempfile.TemporaryDirectory() as tmp:
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=Path(tmp)):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=Path(tmp)):
                 with pytest.raises(FileNotFoundError):
                     client.delete_upload("thread-1", "nope.txt")
 
     def test_delete_upload_path_traversal(self, client):
         with tempfile.TemporaryDirectory() as tmp:
             uploads_dir = Path(tmp)
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 with pytest.raises(PermissionError):
                     client.delete_upload("thread-1", "../../etc/passwd")
 
@@ -793,7 +793,7 @@ class TestArtifacts:
             mock_paths = MagicMock()
             mock_paths.sandbox_user_data_dir.return_value = user_data_dir
 
-            with patch("deerflow.client.get_paths", return_value=mock_paths):
+            with patch("unitygrid.client.get_paths", return_value=mock_paths):
                 content, mime = client.get_artifact("t1", "mnt/user-data/outputs/result.txt")
 
             assert content == b"artifact content"
@@ -807,7 +807,7 @@ class TestArtifacts:
             mock_paths = MagicMock()
             mock_paths.sandbox_user_data_dir.return_value = user_data_dir
 
-            with patch("deerflow.client.get_paths", return_value=mock_paths):
+            with patch("unitygrid.client.get_paths", return_value=mock_paths):
                 with pytest.raises(FileNotFoundError):
                     client.get_artifact("t1", "mnt/user-data/outputs/nope.txt")
 
@@ -823,7 +823,7 @@ class TestArtifacts:
             mock_paths = MagicMock()
             mock_paths.sandbox_user_data_dir.return_value = user_data_dir
 
-            with patch("deerflow.client.get_paths", return_value=mock_paths):
+            with patch("unitygrid.client.get_paths", return_value=mock_paths):
                 with pytest.raises(PermissionError):
                     client.get_artifact("t1", "mnt/user-data/../../../etc/passwd")
 
@@ -976,7 +976,7 @@ class TestScenarioFileLifecycle:
             (tmp_path / "report.txt").write_text("quarterly report data")
             (tmp_path / "data.csv").write_text("a,b,c\n1,2,3")
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 # Step 1: Upload
                 result = client.upload_files(
                     "t-lifecycle",
@@ -1017,7 +1017,7 @@ class TestScenarioFileLifecycle:
             src_file = tmp_path / "input.txt"
             src_file.write_text("raw data to process")
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
                 uploaded = client.upload_files("t-artifact", [src_file])
                 assert len(uploaded["files"]) == 1
 
@@ -1028,7 +1028,7 @@ class TestScenarioFileLifecycle:
             mock_paths = MagicMock()
             mock_paths.sandbox_user_data_dir.return_value = user_data_dir
 
-            with patch("deerflow.client.get_paths", return_value=mock_paths):
+            with patch("unitygrid.client.get_paths", return_value=mock_paths):
                 content, mime = client.get_artifact("t-artifact", "mnt/user-data/outputs/analysis.json")
 
             assert json.loads(content) == {"result": "processed"}
@@ -1064,12 +1064,12 @@ class TestScenarioConfigManagement:
         skill.category = "public"
         skill.enabled = True
 
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]):
             skills_result = client.list_skills()
         assert len(skills_result["skills"]) == 1
 
         # Get specific skill
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]):
             detail = client.get_skill("web-search")
         assert detail is not None
         assert detail["enabled"] is True
@@ -1091,9 +1091,9 @@ class TestScenarioConfigManagement:
 
             client._agent = MagicMock()  # Simulate existing agent
             with (
-                patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
-                patch("deerflow.client.get_extensions_config", return_value=current_config),
-                patch("deerflow.client.reload_extensions_config", return_value=reloaded_config),
+                patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
+                patch("unitygrid.client.get_extensions_config", return_value=current_config),
+                patch("unitygrid.client.reload_extensions_config", return_value=reloaded_config),
             ):
                 mcp_result = client.update_mcp_config({"my-mcp": {"enabled": True}})
             assert "my-mcp" in mcp_result["mcp_servers"]
@@ -1120,10 +1120,10 @@ class TestScenarioConfigManagement:
 
             client._agent = MagicMock()  # Simulate re-created agent
             with (
-                patch("deerflow.skills.loader.load_skills", side_effect=[[skill], [toggled]]),
-                patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
-                patch("deerflow.client.get_extensions_config", return_value=ext_config),
-                patch("deerflow.client.reload_extensions_config"),
+                patch("unitygrid.skills.loader.load_skills", side_effect=[[skill], [toggled]]),
+                patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
+                patch("unitygrid.client.get_extensions_config", return_value=ext_config),
+                patch("unitygrid.client.reload_extensions_config"),
             ):
                 skill_result = client.update_skill("code-gen", enabled=False)
             assert skill_result["enabled"] is False
@@ -1146,10 +1146,10 @@ class TestScenarioAgentRecreation:
         config_b = client._get_runnable_config("t1", model_name="claude-3")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", side_effect=fake_create_agent),
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", side_effect=fake_create_agent),
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
         ):
             client._ensure_agent(config_a)
@@ -1173,10 +1173,10 @@ class TestScenarioAgentRecreation:
         config = client._get_runnable_config("t1", model_name="gpt-4")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", side_effect=fake_create_agent),
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", side_effect=fake_create_agent),
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
         ):
             client._ensure_agent(config)
@@ -1197,10 +1197,10 @@ class TestScenarioAgentRecreation:
         config = client._get_runnable_config("t1")
 
         with (
-            patch("deerflow.client.create_chat_model"),
-            patch("deerflow.client.create_agent", side_effect=fake_create_agent),
-            patch("deerflow.client._build_middlewares", return_value=[]),
-            patch("deerflow.client.apply_prompt_template", return_value="prompt"),
+            patch("unitygrid.client.create_chat_model"),
+            patch("unitygrid.client.create_agent", side_effect=fake_create_agent),
+            patch("unitygrid.client._build_middlewares", return_value=[]),
+            patch("unitygrid.client.apply_prompt_template", return_value="prompt"),
             patch.object(client, "_get_tools", return_value=[]),
         ):
             client._ensure_agent(config)
@@ -1248,7 +1248,7 @@ class TestScenarioThreadIsolation:
             def get_dir(thread_id):
                 return uploads_a if thread_id == "thread-a" else uploads_b
 
-            with patch.object(DeerFlowClient, "_get_uploads_dir", side_effect=get_dir):
+            with patch.object(UnityGridClient, "_get_uploads_dir", side_effect=get_dir):
                 client.upload_files("thread-a", [src_file])
 
                 files_a = client.list_uploads("thread-a")
@@ -1271,7 +1271,7 @@ class TestScenarioThreadIsolation:
             mock_paths = MagicMock()
             mock_paths.sandbox_user_data_dir.side_effect = lambda tid: data_a if tid == "thread-a" else data_b
 
-            with patch("deerflow.client.get_paths", return_value=mock_paths):
+            with patch("unitygrid.client.get_paths", return_value=mock_paths):
                 content, _ = client.get_artifact("thread-a", "mnt/user-data/outputs/result.txt")
                 assert content == b"thread-a artifact"
 
@@ -1295,24 +1295,24 @@ class TestScenarioMemoryWorkflow:
 
         config = MagicMock()
         config.enabled = True
-        config.storage_path = ".deer-flow/memory.json"
+        config.storage_path = ".unitygrid/memory.json"
         config.debounce_seconds = 30
         config.max_facts = 100
         config.fact_confidence_threshold = 0.7
         config.injection_enabled = True
         config.max_injection_tokens = 2000
 
-        with patch("deerflow.agents.memory.updater.get_memory_data", return_value=initial_data):
+        with patch("unitygrid.agents.memory.updater.get_memory_data", return_value=initial_data):
             mem = client.get_memory()
         assert len(mem["facts"]) == 1
 
-        with patch("deerflow.agents.memory.updater.reload_memory_data", return_value=updated_data):
+        with patch("unitygrid.agents.memory.updater.reload_memory_data", return_value=updated_data):
             refreshed = client.reload_memory()
         assert len(refreshed["facts"]) == 2
 
         with (
-            patch("deerflow.config.memory_config.get_memory_config", return_value=config),
-            patch("deerflow.agents.memory.updater.get_memory_data", return_value=updated_data),
+            patch("unitygrid.config.memory_config.get_memory_config", return_value=config),
+            patch("unitygrid.agents.memory.updater.get_memory_data", return_value=updated_data),
         ):
             status = client.get_memory_status()
         assert status["config"]["enabled"] is True
@@ -1340,8 +1340,8 @@ class TestScenarioSkillInstallAndUse:
 
             # Step 1: Install
             with (
-                patch("deerflow.skills.loader.get_skills_root_path", return_value=skills_root),
-                patch("deerflow.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "my-analyzer")),
+                patch("unitygrid.skills.loader.get_skills_root_path", return_value=skills_root),
+                patch("unitygrid.skills.validation._validate_skill_frontmatter", return_value=(True, "OK", "my-analyzer")),
             ):
                 result = client.install_skill(archive)
             assert result["success"] is True
@@ -1355,7 +1355,7 @@ class TestScenarioSkillInstallAndUse:
             installed_skill.category = "custom"
             installed_skill.enabled = True
 
-            with patch("deerflow.skills.loader.load_skills", return_value=[installed_skill]):
+            with patch("unitygrid.skills.loader.load_skills", return_value=[installed_skill]):
                 skills_result = client.list_skills()
             assert any(s["name"] == "my-analyzer" for s in skills_result["skills"])
 
@@ -1375,10 +1375,10 @@ class TestScenarioSkillInstallAndUse:
             config_file.write_text("{}")
 
             with (
-                patch("deerflow.skills.loader.load_skills", side_effect=[[installed_skill], [disabled_skill]]),
-                patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
-                patch("deerflow.client.get_extensions_config", return_value=ext_config),
-                patch("deerflow.client.reload_extensions_config"),
+                patch("unitygrid.skills.loader.load_skills", side_effect=[[installed_skill], [disabled_skill]]),
+                patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
+                patch("unitygrid.client.get_extensions_config", return_value=ext_config),
+                patch("unitygrid.client.reload_extensions_config"),
             ):
                 toggled = client.update_skill("my-analyzer", enabled=False)
             assert toggled["enabled"] is False
@@ -1474,9 +1474,9 @@ class TestScenarioEdgeCases:
             pdf_file.write_bytes(b"%PDF-1.4 fake content")
 
             with (
-                patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir),
-                patch("deerflow.utils.file_conversion.CONVERTIBLE_EXTENSIONS", {".pdf"}),
-                patch("deerflow.utils.file_conversion.convert_file_to_markdown", side_effect=Exception("conversion failed")),
+                patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir),
+                patch("unitygrid.utils.file_conversion.CONVERTIBLE_EXTENSIONS", {".pdf"}),
+                patch("unitygrid.utils.file_conversion.convert_file_to_markdown", side_effect=Exception("conversion failed")),
             ):
                 result = client.upload_files("t-pdf-fail", [pdf_file])
 
@@ -1493,7 +1493,7 @@ class TestScenarioEdgeCases:
 
 
 class TestGatewayConformance:
-    """Validate that DeerFlowClient return dicts conform to Gateway Pydantic response models.
+    """Validate that UnityGridClient return dicts conform to Gateway Pydantic response models.
 
     Each test calls a client method, then parses the result through the
     corresponding Gateway response model. If the client drifts (missing or
@@ -1508,8 +1508,8 @@ class TestGatewayConformance:
         model.supports_thinking = False
         mock_app_config.models = [model]
 
-        with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-            client = DeerFlowClient()
+        with patch("unitygrid.client.get_app_config", return_value=mock_app_config):
+            client = UnityGridClient()
 
         result = client.list_models()
         parsed = ModelsListResponse(**result)
@@ -1525,8 +1525,8 @@ class TestGatewayConformance:
         mock_app_config.models = [model]
         mock_app_config.get_model_config.return_value = model
 
-        with patch("deerflow.client.get_app_config", return_value=mock_app_config):
-            client = DeerFlowClient()
+        with patch("unitygrid.client.get_app_config", return_value=mock_app_config):
+            client = UnityGridClient()
 
         result = client.get_model("test-model")
         assert result is not None
@@ -1541,7 +1541,7 @@ class TestGatewayConformance:
         skill.category = "public"
         skill.enabled = True
 
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]):
             result = client.list_skills()
 
         parsed = SkillsListResponse(**result)
@@ -1556,7 +1556,7 @@ class TestGatewayConformance:
         skill.category = "public"
         skill.enabled = True
 
-        with patch("deerflow.skills.loader.load_skills", return_value=[skill]):
+        with patch("unitygrid.skills.loader.load_skills", return_value=[skill]):
             result = client.get_skill("web-search")
 
         assert result is not None
@@ -1574,7 +1574,7 @@ class TestGatewayConformance:
 
         custom_dir = tmp_path / "custom"
         custom_dir.mkdir()
-        with patch("deerflow.skills.loader.get_skills_root_path", return_value=tmp_path):
+        with patch("unitygrid.skills.loader.get_skills_root_path", return_value=tmp_path):
             result = client.install_skill(archive)
 
         parsed = SkillInstallResponse(**result)
@@ -1596,7 +1596,7 @@ class TestGatewayConformance:
         ext_config = MagicMock()
         ext_config.mcp_servers = {"test": server}
 
-        with patch("deerflow.client.get_extensions_config", return_value=ext_config):
+        with patch("unitygrid.client.get_extensions_config", return_value=ext_config):
             result = client.get_mcp_config()
 
         parsed = McpConfigResponse(**result)
@@ -1622,9 +1622,9 @@ class TestGatewayConformance:
         config_file.write_text("{}")
 
         with (
-            patch("deerflow.client.get_extensions_config", return_value=ext_config),
-            patch("deerflow.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
-            patch("deerflow.client.reload_extensions_config", return_value=ext_config),
+            patch("unitygrid.client.get_extensions_config", return_value=ext_config),
+            patch("unitygrid.client.ExtensionsConfig.resolve_config_path", return_value=config_file),
+            patch("unitygrid.client.reload_extensions_config", return_value=ext_config),
         ):
             result = client.update_mcp_config({"srv": server.model_dump.return_value})
 
@@ -1638,7 +1638,7 @@ class TestGatewayConformance:
         src_file = tmp_path / "hello.txt"
         src_file.write_text("hello")
 
-        with patch.object(DeerFlowClient, "_get_uploads_dir", return_value=uploads_dir):
+        with patch.object(UnityGridClient, "_get_uploads_dir", return_value=uploads_dir):
             result = client.upload_files("t-conform", [src_file])
 
         parsed = UploadResponse(**result)
@@ -1648,14 +1648,14 @@ class TestGatewayConformance:
     def test_get_memory_config(self, client):
         mem_cfg = MagicMock()
         mem_cfg.enabled = True
-        mem_cfg.storage_path = ".deer-flow/memory.json"
+        mem_cfg.storage_path = ".unitygrid/memory.json"
         mem_cfg.debounce_seconds = 30
         mem_cfg.max_facts = 100
         mem_cfg.fact_confidence_threshold = 0.7
         mem_cfg.injection_enabled = True
         mem_cfg.max_injection_tokens = 2000
 
-        with patch("deerflow.config.memory_config.get_memory_config", return_value=mem_cfg):
+        with patch("unitygrid.config.memory_config.get_memory_config", return_value=mem_cfg):
             result = client.get_memory_config()
 
         parsed = MemoryConfigResponse(**result)
@@ -1665,7 +1665,7 @@ class TestGatewayConformance:
     def test_get_memory_status(self, client):
         mem_cfg = MagicMock()
         mem_cfg.enabled = True
-        mem_cfg.storage_path = ".deer-flow/memory.json"
+        mem_cfg.storage_path = ".unitygrid/memory.json"
         mem_cfg.debounce_seconds = 30
         mem_cfg.max_facts = 100
         mem_cfg.fact_confidence_threshold = 0.7
@@ -1689,8 +1689,8 @@ class TestGatewayConformance:
         }
 
         with (
-            patch("deerflow.config.memory_config.get_memory_config", return_value=mem_cfg),
-            patch("deerflow.agents.memory.updater.get_memory_data", return_value=memory_data),
+            patch("unitygrid.config.memory_config.get_memory_config", return_value=mem_cfg),
+            patch("unitygrid.agents.memory.updater.get_memory_data", return_value=memory_data),
         ):
             result = client.get_memory_status()
 

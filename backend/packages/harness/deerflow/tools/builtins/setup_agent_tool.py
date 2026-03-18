@@ -6,7 +6,7 @@ from langchain_core.tools import tool
 from langgraph.prebuilt import ToolRuntime
 from langgraph.types import Command
 
-from deerflow.config.paths import get_paths
+from unitygrid.config.paths import get_paths
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def setup_agent(
     description: str,
     runtime: ToolRuntime,
 ) -> Command:
-    """Setup the custom DeerFlow agent.
+    """Setup the custom UnityGrid agent.
 
     Args:
         soul: Full SOUL.md content defining the agent's personality and behavior.

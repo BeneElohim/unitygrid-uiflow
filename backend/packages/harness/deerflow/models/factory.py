@@ -2,8 +2,8 @@ import logging
 
 from langchain.chat_models import BaseChatModel
 
-from deerflow.config import get_app_config, get_tracing_config, is_tracing_enabled
-from deerflow.reflection import resolve_class
+from unitygrid.config import get_app_config, get_tracing_config, is_tracing_enabled
+from unitygrid.reflection import resolve_class
 
 logger = logging.getLogger(__name__)
 

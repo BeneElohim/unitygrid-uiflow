@@ -10,10 +10,10 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.gateway.path_utils import resolve_thread_virtual_path
-from deerflow.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
-from deerflow.skills import Skill, load_skills
-from deerflow.skills.loader import get_skills_root_path
-from deerflow.skills.validation import _validate_skill_frontmatter
+from unitygrid.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
+from unitygrid.skills import Skill, load_skills
+from unitygrid.skills.loader import get_skills_root_path
+from unitygrid.skills.validation import _validate_skill_frontmatter
 
 logger = logging.getLogger(__name__)
 

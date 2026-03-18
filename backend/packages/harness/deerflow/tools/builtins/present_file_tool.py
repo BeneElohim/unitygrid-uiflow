@@ -6,8 +6,8 @@ from langchain_core.messages import ToolMessage
 from langgraph.types import Command
 from langgraph.typing import ContextT
 
-from deerflow.agents.thread_state import ThreadState
-from deerflow.config.paths import VIRTUAL_PATH_PREFIX, get_paths
+from unitygrid.agents.thread_state import ThreadState
+from unitygrid.config.paths import VIRTUAL_PATH_PREFIX, get_paths
 
 OUTPUTS_VIRTUAL_PREFIX = f"{VIRTUAL_PATH_PREFIX}/outputs"
 
@@ -21,7 +21,7 @@ def _normalize_presented_filepath(
     Accepts either:
     - A virtual sandbox path such as `/mnt/user-data/outputs/report.md`
     - A host-side thread outputs path such as
-      `/app/backend/.deer-flow/threads/<thread>/user-data/outputs/report.md`
+      `/app/backend/.unitygrid/threads/<thread>/user-data/outputs/report.md`
 
     Returns:
         The normalized virtual path.

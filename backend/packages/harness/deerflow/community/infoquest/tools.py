@@ -1,7 +1,7 @@
 from langchain.tools import tool
 
-from deerflow.config import get_app_config
-from deerflow.utils.readability import ReadabilityExtractor
+from unitygrid.config import get_app_config
+from unitygrid.utils.readability import ReadabilityExtractor
 
 from .infoquest_client import InfoQuestClient
 

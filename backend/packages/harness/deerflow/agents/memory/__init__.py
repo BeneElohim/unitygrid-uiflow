@@ -1,4 +1,4 @@
-"""Memory module for DeerFlow.
+"""Memory module for UnityGrid.
 
 This module provides a global memory mechanism that:
 - Stores user context and conversation history in memory.json
@@ -6,19 +6,19 @@ This module provides a global memory mechanism that:
 - Injects relevant memory into system prompts for personalized responses
 """
 
-from deerflow.agents.memory.prompt import (
+from unitygrid.agents.memory.prompt import (
     FACT_EXTRACTION_PROMPT,
     MEMORY_UPDATE_PROMPT,
     format_conversation_for_update,
     format_memory_for_injection,
 )
-from deerflow.agents.memory.queue import (
+from unitygrid.agents.memory.queue import (
     ConversationContext,
     MemoryUpdateQueue,
     get_memory_queue,
     reset_memory_queue,
 )
-from deerflow.agents.memory.updater import (
+from unitygrid.agents.memory.updater import (
     MemoryUpdater,
     get_memory_data,
     reload_memory_data,

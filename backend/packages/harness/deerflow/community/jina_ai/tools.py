@@ -1,8 +1,8 @@
 from langchain.tools import tool
 
-from deerflow.community.jina_ai.jina_client import JinaClient
-from deerflow.config import get_app_config
-from deerflow.utils.readability import ReadabilityExtractor
+from unitygrid.community.jina_ai.jina_client import JinaClient
+from unitygrid.config import get_app_config
+from unitygrid.utils.readability import ReadabilityExtractor
 
 readability_extractor = ReadabilityExtractor()
 

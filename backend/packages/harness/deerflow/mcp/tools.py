@@ -4,9 +4,9 @@ import logging
 
 from langchain_core.tools import BaseTool
 
-from deerflow.config.extensions_config import ExtensionsConfig
-from deerflow.mcp.client import build_servers_config
-from deerflow.mcp.oauth import build_oauth_tool_interceptor, get_initial_oauth_headers
+from unitygrid.config.extensions_config import ExtensionsConfig
+from unitygrid.mcp.client import build_servers_config
+from unitygrid.mcp.oauth import build_oauth_tool_interceptor, get_initial_oauth_headers
 
 logger = logging.getLogger(__name__)
 

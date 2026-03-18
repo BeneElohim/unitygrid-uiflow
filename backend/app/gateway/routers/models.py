@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from deerflow.config import get_app_config
+from unitygrid.config import get_app_config
 
 router = APIRouter(prefix="/api", tags=["models"])
 

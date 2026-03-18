@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide explains how to configure DeerFlow for your environment.
+This guide explains how to configure UnityGrid for your environment.
 
 ## Config Versioning
 
@@ -116,7 +116,7 @@ Configure specific tools available to the agent:
 tools:
   - name: web_search
     group: web
-    use: deerflow.community.tavily.tools:web_search_tool
+    use: unitygrid.community.tavily.tools:web_search_tool
     max_results: 5
     # api_key: $TAVILY_API_KEY  # Optional
 ```
@@ -132,18 +132,18 @@ tools:
 
 ### Sandbox
 
-DeerFlow supports multiple sandbox execution modes. Configure your preferred mode in `config.yaml`:
+UnityGrid supports multiple sandbox execution modes. Configure your preferred mode in `config.yaml`:
 
 **Local Execution** (runs sandbox code directly on the host machine):
 ```yaml
 sandbox:
-   use: deerflow.sandbox.local:LocalSandboxProvider # Local execution
+   use: unitygrid.sandbox.local:LocalSandboxProvider # Local execution
 ```
 
 **Docker Execution** (runs sandbox code in isolated Docker containers):
 ```yaml
 sandbox:
-   use: deerflow.community.aio_sandbox:AioSandboxProvider # Docker-based sandbox
+   use: unitygrid.community.aio_sandbox:AioSandboxProvider # Docker-based sandbox
 ```
 
 **Docker Execution with Kubernetes** (runs sandbox code in Kubernetes pods via provisioner service):
@@ -152,11 +152,11 @@ This mode runs each sandbox in an isolated Kubernetes Pod on your **host machine
 
 ```yaml
 sandbox:
-   use: deerflow.community.aio_sandbox:AioSandboxProvider
+   use: unitygrid.community.aio_sandbox:AioSandboxProvider
    provisioner_url: http://provisioner:8002
 ```
 
-When using Docker development (`make docker-start`), DeerFlow starts the `provisioner` service only if this provisioner mode is configured. In local or plain Docker sandbox modes, `provisioner` is skipped.
+When using Docker development (`make docker-start`), UnityGrid starts the `provisioner` service only if this provisioner mode is configured. In local or plain Docker sandbox modes, `provisioner` is skipped.
 
 See [Provisioner Setup Guide](docker/provisioner/README.md) for detailed configuration, prerequisites, and troubleshooting.
 
@@ -165,16 +165,16 @@ Choose between local execution or Docker-based isolation:
 **Option 1: Local Sandbox** (default, simpler setup):
 ```yaml
 sandbox:
-  use: deerflow.sandbox.local:LocalSandboxProvider
+  use: unitygrid.sandbox.local:LocalSandboxProvider
 ```
 
 **Option 2: Docker Sandbox** (isolated, more secure):
 ```yaml
 sandbox:
-  use: deerflow.community.aio_sandbox:AioSandboxProvider
+  use: unitygrid.community.aio_sandbox:AioSandboxProvider
   port: 8080
   auto_start: true
-  container_prefix: deer-flow-sandbox
+  container_prefix: unitygrid-sandbox
 
   # Optional: Additional mounts
   mounts:
@@ -197,7 +197,7 @@ skills:
 ```
 
 **How Skills Work**:
-- Skills are stored in `deer-flow/skills/{public,custom}/`
+- Skills are stored in `unitygrid/skills/{public,custom}/`
 - Each skill has a `SKILL.md` file with metadata
 - Skills are automatically discovered and loaded
 - Available in both local and Docker sandbox via path mapping
@@ -216,7 +216,7 @@ title:
 
 ## Environment Variables
 
-DeerFlow supports environment variable substitution using the `$` prefix:
+UnityGrid supports environment variable substitution using the `$` prefix:
 
 ```yaml
 models:
@@ -233,16 +233,16 @@ models:
 
 ## Configuration Location
 
-The configuration file should be placed in the **project root directory** (`deer-flow/config.yaml`), not in the backend directory.
+The configuration file should be placed in the **project root directory** (`unitygrid/config.yaml`), not in the backend directory.
 
 ## Configuration Priority
 
-DeerFlow searches for configuration in this order:
+UnityGrid searches for configuration in this order:
 
 1. Path specified in code via `config_path` argument
 2. Path from `DEER_FLOW_CONFIG_PATH` environment variable
 3. `config.yaml` in current working directory (typically `backend/` when running)
-4. `config.yaml` in parent directory (project root: `deer-flow/`)
+4. `config.yaml` in parent directory (project root: `unitygrid/`)
 
 ## Best Practices
 
@@ -256,7 +256,7 @@ DeerFlow searches for configuration in this order:
 ## Troubleshooting
 
 ### "Config file not found"
-- Ensure `config.yaml` exists in the **project root** directory (`deer-flow/config.yaml`)
+- Ensure `config.yaml` exists in the **project root** directory (`unitygrid/config.yaml`)
 - The backend searches parent directory by default, so root location is preferred
 - Alternatively, set `DEER_FLOW_CONFIG_PATH` environment variable to custom location
 
@@ -265,7 +265,7 @@ DeerFlow searches for configuration in this order:
 - Check that `$` prefix is used for env var references
 
 ### "Skills not loading"
-- Check that `deer-flow/skills/` directory exists
+- Check that `unitygrid/skills/` directory exists
 - Verify skills have valid `SKILL.md` files
 - Check `skills.path` configuration if using custom path
 

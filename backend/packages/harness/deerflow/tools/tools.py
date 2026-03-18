@@ -2,10 +2,10 @@ import logging
 
 from langchain.tools import BaseTool
 
-from deerflow.config import get_app_config
-from deerflow.reflection import resolve_variable
-from deerflow.tools.builtins import ask_clarification_tool, present_file_tool, task_tool, view_image_tool
-from deerflow.tools.builtins.tool_search import reset_deferred_registry
+from unitygrid.config import get_app_config
+from unitygrid.reflection import resolve_variable
+from unitygrid.tools.builtins import ask_clarification_tool, present_file_tool, task_tool, view_image_tool
+from unitygrid.tools.builtins.tool_search import reset_deferred_registry
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ def get_available_tools(
     """Get all available tools from config.
 
     Note: MCP tools should be initialized at application startup using
-    `initialize_mcp_tools()` from deerflow.mcp module.
+    `initialize_mcp_tools()` from unitygrid.mcp module.
 
     Args:
         groups: Optional list of tool groups to filter by.
@@ -71,8 +71,8 @@ def get_available_tools(
     reset_deferred_registry()
     if include_mcp:
         try:
-            from deerflow.config.extensions_config import ExtensionsConfig
-            from deerflow.mcp.cache import get_cached_mcp_tools
+            from unitygrid.config.extensions_config import ExtensionsConfig
+            from unitygrid.mcp.cache import get_cached_mcp_tools
 
             extensions_config = ExtensionsConfig.from_file()
             if extensions_config.get_enabled_mcp_servers():
@@ -83,8 +83,8 @@ def get_available_tools(
                     # When tool_search is enabled, register MCP tools in the
                     # deferred registry and add tool_search to builtin tools.
                     if config.tool_search.enabled:
-                        from deerflow.tools.builtins.tool_search import DeferredToolRegistry, set_deferred_registry
-                        from deerflow.tools.builtins.tool_search import tool_search as tool_search_tool
+                        from unitygrid.tools.builtins.tool_search import DeferredToolRegistry, set_deferred_registry
+                        from unitygrid.tools.builtins.tool_search import tool_search as tool_search_tool
 
                         registry = DeferredToolRegistry()
                         for t in mcp_tools:

@@ -10,9 +10,9 @@ def get_skills_root_path() -> Path:
     Get the root path of the skills directory.
 
     Returns:
-        Path to the skills directory (deer-flow/skills)
+        Path to the skills directory (unitygrid/skills)
     """
-    # loader.py lives at packages/harness/deerflow/skills/loader.py — 5 parents up reaches backend/
+    # loader.py lives at packages/harness/unitygrid/skills/loader.py — 5 parents up reaches backend/
     backend_dir = Path(__file__).resolve().parent.parent.parent.parent.parent
     # skills directory is sibling to backend directory
     skills_dir = backend_dir.parent / "skills"
@@ -29,7 +29,7 @@ def load_skills(skills_path: Path | None = None, use_config: bool = True, enable
     Args:
         skills_path: Optional custom path to skills directory.
                      If not provided and use_config is True, uses path from config.
-                     Otherwise defaults to deer-flow/skills
+                     Otherwise defaults to unitygrid/skills
         use_config: Whether to load skills path from config (default: True)
         enabled_only: If True, only return enabled skills (default: False)
 
@@ -39,7 +39,7 @@ def load_skills(skills_path: Path | None = None, use_config: bool = True, enable
     if skills_path is None:
         if use_config:
             try:
-                from deerflow.config import get_app_config
+                from unitygrid.config import get_app_config
 
                 config = get_app_config()
                 skills_path = config.skills.get_skills_path()
@@ -79,7 +79,7 @@ def load_skills(skills_path: Path | None = None, use_config: bool = True, enable
     # made through the Gateway API (which runs in a separate process) are immediately
     # reflected in the LangGraph Server when loading skills.
     try:
-        from deerflow.config.extensions_config import ExtensionsConfig
+        from unitygrid.config.extensions_config import ExtensionsConfig
 
         extensions_config = ExtensionsConfig.from_file()
         for skill in skills:

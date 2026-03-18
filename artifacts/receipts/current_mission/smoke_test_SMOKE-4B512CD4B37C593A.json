@@ -1,0 +1,8 @@
+{
+  "pop_id": "SMOKE-4B512CD4B37C593A",
+  "sha256_hash": "4b512cd4b37c593a13f175bf1cb0bfcb83b2720529cf08cbc346563c1af9701a",
+  "verdict": "VALIDATED",
+  "delta_ck": 1.0,
+  "checks_passed": "24/24",
+  "timestamp": "2026-03-18T14:08:40Z"
+}

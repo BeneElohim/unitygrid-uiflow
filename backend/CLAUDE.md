@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DeerFlow is a LangGraph-based AI super agent system with a full-stack architecture. The backend provides a "super agent" with sandbox execution, persistent memory, subagent delegation, and extensible tool integration - all operating in per-thread isolated environments.
+UnityGrid is a LangGraph-based AI super agent system with a full-stack architecture. The backend provides a "super agent" with sandbox execution, persistent memory, subagent delegation, and extensible tool integration - all operating in per-thread isolated environments.
 
 **Architecture**:
 - **LangGraph Server** (port 2024): Agent runtime and workflow execution
@@ -15,7 +15,7 @@ DeerFlow is a LangGraph-based AI super agent system with a full-stack architectu
 
 **Project Structure**:
 ```
-deer-flow/
+unitygrid/
 ├── Makefile                    # Root commands (check, install, dev, stop)
 ├── config.yaml                 # Main application configuration
 ├── extensions_config.json      # MCP servers and skills configuration
@@ -23,9 +23,9 @@ deer-flow/
 │   ├── Makefile               # Backend-only commands (dev, gateway, lint)
 │   ├── langgraph.json         # LangGraph server configuration
 │   ├── packages/
-│   │   └── harness/           # deerflow-harness package (import: deerflow.*)
+│   │   └── harness/           # unitygrid-harness package (import: unitygrid.*)
 │   │       ├── pyproject.toml
-│   │       └── deerflow/
+│   │       └── unitygrid/
 │   │           ├── agents/            # LangGraph agent system
 │   │           │   ├── lead_agent/    # Main agent (factory + system prompt)
 │   │           │   ├── middlewares/   # 10 middleware components
@@ -48,7 +48,7 @@ deer-flow/
 │   │           ├── community/         # Community tools (tavily, jina_ai, firecrawl, image_search, aio_sandbox)
 │   │           ├── reflection/        # Dynamic module loading (resolve_variable, resolve_class)
 │   │           ├── utils/             # Utilities (network, readability)
-│   │           └── client.py          # Embedded Python client (DeerFlowClient)
+│   │           └── client.py          # Embedded Python client (UnityGridClient)
 │   ├── app/                   # Application layer (import: app.*)
 │   │   ├── gateway/           # FastAPI Gateway API
 │   │   │   ├── app.py         # FastAPI application
@@ -98,7 +98,7 @@ Regression tests related to Docker/provisioner behavior:
 - `tests/test_provisioner_kubeconfig.py` (kubeconfig file/directory handling)
 
 Boundary check (harness → app import firewall):
-- `tests/test_harness_boundary.py` — ensures `packages/harness/deerflow/` never imports from `app.*`
+- `tests/test_harness_boundary.py` — ensures `packages/harness/unitygrid/` never imports from `app.*`
 
 CI runs these regression tests for every pull request via [.github/workflows/backend-unit-tests.yml](../.github/workflows/backend-unit-tests.yml).
 
@@ -108,23 +108,23 @@ CI runs these regression tests for every pull request via [.github/workflows/bac
 
 The backend is split into two layers with a strict dependency direction:
 
-- **Harness** (`packages/harness/deerflow/`): Publishable agent framework package (`deerflow-harness`). Import prefix: `deerflow.*`. Contains agent orchestration, tools, sandbox, models, MCP, skills, config — everything needed to build and run agents.
+- **Harness** (`packages/harness/unitygrid/`): Publishable agent framework package (`unitygrid-harness`). Import prefix: `unitygrid.*`. Contains agent orchestration, tools, sandbox, models, MCP, skills, config — everything needed to build and run agents.
 - **App** (`app/`): Unpublished application code. Import prefix: `app.*`. Contains the FastAPI Gateway API and IM channel integrations (Feishu, Slack, Telegram).
 
-**Dependency rule**: App imports deerflow, but deerflow never imports app. This boundary is enforced by `tests/test_harness_boundary.py` which runs in CI.
+**Dependency rule**: App imports unitygrid, but unitygrid never imports app. This boundary is enforced by `tests/test_harness_boundary.py` which runs in CI.
 
 **Import conventions**:
 ```python
 # Harness internal
-from deerflow.agents import make_lead_agent
-from deerflow.models import create_chat_model
+from unitygrid.agents import make_lead_agent
+from unitygrid.models import create_chat_model
 
 # App internal
 from app.gateway.app import app
 from app.channels.service import start_channel_service
 
 # App → Harness (allowed)
-from deerflow.config import get_app_config
+from unitygrid.config import get_app_config
 
 # Harness → App (FORBIDDEN — enforced by test_harness_boundary.py)
 # from app.gateway.routers.uploads import ...  # ← will fail CI
@@ -132,13 +132,13 @@ from deerflow.config import get_app_config
 
 ### Agent System
 
-**Lead Agent** (`packages/harness/deerflow/agents/lead_agent/agent.py`):
+**Lead Agent** (`packages/harness/unitygrid/agents/lead_agent/agent.py`):
 - Entry point: `make_lead_agent(config: RunnableConfig)` registered in `langgraph.json`
 - Dynamic model selection via `create_chat_model()` with thinking/vision support
 - Tools loaded via `get_available_tools()` - combines sandbox, built-in, MCP, community, and subagent tools
 - System prompt generated by `apply_prompt_template()` with skills, memory, and subagent instructions
 
-**ThreadState** (`packages/harness/deerflow/agents/thread_state.py`):
+**ThreadState** (`packages/harness/unitygrid/agents/thread_state.py`):
 - Extends `AgentState` with: `sandbox`, `thread_data`, `title`, `artifacts`, `todos`, `uploaded_files`, `viewed_images`
 - Uses custom reducers: `merge_artifacts` (deduplicate), `merge_viewed_images` (merge/clear)
 
@@ -150,9 +150,9 @@ from deerflow.config import get_app_config
 
 ### Middleware Chain
 
-Middlewares execute in strict order in `packages/harness/deerflow/agents/lead_agent/agent.py`:
+Middlewares execute in strict order in `packages/harness/unitygrid/agents/lead_agent/agent.py`:
 
-1. **ThreadDataMiddleware** - Creates per-thread directories (`backend/.deer-flow/threads/{thread_id}/user-data/{workspace,uploads,outputs}`)
+1. **ThreadDataMiddleware** - Creates per-thread directories (`backend/.unitygrid/threads/{thread_id}/user-data/{workspace,uploads,outputs}`)
 2. **UploadsMiddleware** - Tracks and injects newly uploaded files into conversation
 3. **SandboxMiddleware** - Acquires sandbox, stores `sandbox_id` in state
 4. **DanglingToolCallMiddleware** - Injects placeholder ToolMessages for AIMessage tool_calls that lack responses (e.g., due to user interruption)
@@ -208,28 +208,28 @@ FastAPI application on port 8001 with health check at `GET /health`.
 
 Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → Gateway.
 
-### Sandbox System (`packages/harness/deerflow/sandbox/`)
+### Sandbox System (`packages/harness/unitygrid/sandbox/`)
 
 **Interface**: Abstract `Sandbox` with `execute_command`, `read_file`, `write_file`, `list_dir`
 **Provider Pattern**: `SandboxProvider` with `acquire`, `get`, `release` lifecycle
 **Implementations**:
 - `LocalSandboxProvider` - Singleton local filesystem execution with path mappings
-- `AioSandboxProvider` (`packages/harness/deerflow/community/`) - Docker-based isolation
+- `AioSandboxProvider` (`packages/harness/unitygrid/community/`) - Docker-based isolation
 
 **Virtual Path System**:
 - Agent sees: `/mnt/user-data/{workspace,uploads,outputs}`, `/mnt/skills`
-- Physical: `backend/.deer-flow/threads/{thread_id}/user-data/...`, `deer-flow/skills/`
+- Physical: `backend/.unitygrid/threads/{thread_id}/user-data/...`, `unitygrid/skills/`
 - Translation: `replace_virtual_path()` / `replace_virtual_paths_in_command()`
 - Detection: `is_local_sandbox()` checks `sandbox_id == "local"`
 
-**Sandbox Tools** (in `packages/harness/deerflow/sandbox/tools.py`):
+**Sandbox Tools** (in `packages/harness/unitygrid/sandbox/tools.py`):
 - `bash` - Execute commands with path translation and error handling
 - `ls` - Directory listing (tree format, max 2 levels)
 - `read_file` - Read file contents with optional line range
 - `write_file` - Write/append to files, creates directories
 - `str_replace` - Substring replacement (single or all occurrences)
 
-### Subagent System (`packages/harness/deerflow/subagents/`)
+### Subagent System (`packages/harness/unitygrid/subagents/`)
 
 **Built-in Agents**: `general-purpose` (all tools except `task`) and `bash` (command specialist)
 **Execution**: Dual thread pool - `_scheduler_pool` (3 workers) + `_execution_pool` (3 workers)
@@ -237,7 +237,7 @@ Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → 
 **Flow**: `task()` tool → `SubagentExecutor` → background thread → poll 5s → SSE events → result
 **Events**: `task_started`, `task_running`, `task_completed`/`task_failed`/`task_timed_out`
 
-### Tool System (`packages/harness/deerflow/tools/`)
+### Tool System (`packages/harness/unitygrid/tools/`)
 
 `get_available_tools(groups, include_mcp, model_name, subagent_enabled)` assembles:
 1. **Config-defined tools** - Resolved from `config.yaml` via `resolve_variable()`
@@ -249,13 +249,13 @@ Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → 
 4. **Subagent tool** (if enabled):
    - `task` - Delegate to subagent (description, prompt, subagent_type, max_turns)
 
-**Community tools** (`packages/harness/deerflow/community/`):
+**Community tools** (`packages/harness/unitygrid/community/`):
 - `tavily/` - Web search (5 results default) and web fetch (4KB limit)
 - `jina_ai/` - Web fetch via Jina reader API with readability extraction
 - `firecrawl/` - Web scraping via Firecrawl API
 - `image_search/` - Image search via DuckDuckGo
 
-### MCP System (`packages/harness/deerflow/mcp/`)
+### MCP System (`packages/harness/unitygrid/mcp/`)
 
 - Uses `langchain-mcp-adapters` `MultiServerMCPClient` for multi-server management
 - **Lazy initialization**: Tools loaded on first use via `get_cached_mcp_tools()`
@@ -264,15 +264,15 @@ Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → 
 - **OAuth (HTTP/SSE)**: Supports token endpoint flows (`client_credentials`, `refresh_token`) with automatic token refresh + Authorization header injection
 - **Runtime updates**: Gateway API saves to extensions_config.json; LangGraph detects via mtime
 
-### Skills System (`packages/harness/deerflow/skills/`)
+### Skills System (`packages/harness/unitygrid/skills/`)
 
-- **Location**: `deer-flow/skills/{public,custom}/`
+- **Location**: `unitygrid/skills/{public,custom}/`
 - **Format**: Directory with `SKILL.md` (YAML frontmatter: name, description, license, allowed-tools)
 - **Loading**: `load_skills()` recursively scans `skills/{public,custom}` for `SKILL.md`, parses metadata, and reads enabled state from extensions_config.json
 - **Injection**: Enabled skills listed in agent system prompt with container paths
 - **Installation**: `POST /api/skills/install` extracts .skill ZIP archive to custom/ directory
 
-### Model Factory (`packages/harness/deerflow/models/factory.py`)
+### Model Factory (`packages/harness/unitygrid/models/factory.py`)
 
 - `create_chat_model(name, thinking_enabled)` instantiates LLM from config via reflection
 - Supports `thinking_enabled` flag with per-model `when_thinking_enabled` overrides
@@ -282,7 +282,7 @@ Proxied through nginx: `/api/langgraph/*` → LangGraph, all other `/api/*` → 
 
 ### IM Channels System (`app/channels/`)
 
-Bridges external messaging platforms (Feishu, Slack, Telegram) to the DeerFlow agent via the LangGraph Server.
+Bridges external messaging platforms (Feishu, Slack, Telegram) to the UnityGrid agent via the LangGraph Server.
 
 **Architecture**: Channels communicate with the LangGraph Server through `langgraph-sdk` HTTP client (same as the frontend), ensuring threads are created and managed server-side.
 
@@ -309,14 +309,14 @@ Bridges external messaging platforms (Feishu, Slack, Telegram) to the DeerFlow a
 - `gateway_url` - Gateway API URL for auxiliary commands (default: `http://localhost:8001`)
 - Per-channel configs: `feishu` (app_id, app_secret), `slack` (bot_token, app_token), `telegram` (bot_token)
 
-### Memory System (`packages/harness/deerflow/agents/memory/`)
+### Memory System (`packages/harness/unitygrid/agents/memory/`)
 
 **Components**:
 - `updater.py` - LLM-based memory updates with fact extraction and atomic file I/O
 - `queue.py` - Debounced update queue (per-thread deduplication, configurable wait time)
 - `prompt.py` - Prompt templates for memory updates
 
-**Data Structure** (stored in `backend/.deer-flow/memory.json`):
+**Data Structure** (stored in `backend/.unitygrid/memory.json`):
 - **User Context**: `workContext`, `personalContext`, `topOfMind` (1-3 sentence summaries)
 - **History**: `recentMonths`, `earlierContext`, `longTermBackground`
 - **Facts**: Discrete facts with `id`, `content`, `category` (preference/knowledge/context/behavior/goal), `confidence` (0-1), `createdAt`, `source`
@@ -336,7 +336,7 @@ Bridges external messaging platforms (Feishu, Slack, Telegram) to the DeerFlow a
 - `max_facts` / `fact_confidence_threshold` - Fact storage limits (100 / 0.7)
 - `max_injection_tokens` - Token limit for prompt injection (2000)
 
-### Reflection System (`packages/harness/deerflow/reflection/`)
+### Reflection System (`packages/harness/unitygrid/reflection/`)
 
 - `resolve_variable(path)` - Import module and return variable (e.g., `module.path:variable_name`)
 - `resolve_class(path, base_class)` - Import and validate class against base class
@@ -358,13 +358,13 @@ Bridges external messaging platforms (Feishu, Slack, Telegram) to the DeerFlow a
 - `mcpServers` - Map of server name → config (enabled, type, command, args, env, url, headers, oauth, description)
 - `skills` - Map of skill name → state (enabled)
 
-Both can be modified at runtime via Gateway API endpoints or `DeerFlowClient` methods.
+Both can be modified at runtime via Gateway API endpoints or `UnityGridClient` methods.
 
-### Embedded Client (`packages/harness/deerflow/client.py`)
+### Embedded Client (`packages/harness/unitygrid/client.py`)
 
-`DeerFlowClient` provides direct in-process access to all DeerFlow capabilities without HTTP services. All return types align with the Gateway API response schemas, so consumer code works identically in HTTP and embedded modes.
+`UnityGridClient` provides direct in-process access to all UnityGrid capabilities without HTTP services. All return types align with the Gateway API response schemas, so consumer code works identically in HTTP and embedded modes.
 
-**Architecture**: Imports the same `deerflow` modules that LangGraph Server and Gateway API use. Shares the same config files and data directories. No FastAPI dependency.
+**Architecture**: Imports the same `unitygrid` modules that LangGraph Server and Gateway API use. Shares the same config files and data directories. No FastAPI dependency.
 
 **Agent Conversation** (replaces LangGraph Server):
 - `chat(message, thread_id)` — synchronous, returns final text
@@ -403,7 +403,7 @@ Both can be modified at runtime via Gateway API endpoints or `DeerFlowClient` me
 - Run the full suite before and after your change: `make test`
 - Tests must pass before a feature is considered complete
 - For lightweight config/utility modules, prefer pure unit tests with no external dependencies
-- If a module causes circular import issues in tests, add a `sys.modules` mock in `tests/conftest.py` (see existing example for `deerflow.subagents.executor`)
+- If a module causes circular import issues in tests, add a `sys.modules` mock in `tests/conftest.py` (see existing example for `unitygrid.subagents.executor`)
 
 ```bash
 # Run all tests

@@ -7,12 +7,12 @@ Supported backends: memory, sqlite, postgres.
 
 Usage (e.g. FastAPI lifespan)::
 
-    from deerflow.agents.checkpointer.async_provider import make_checkpointer
+    from unitygrid.agents.checkpointer.async_provider import make_checkpointer
 
     async with make_checkpointer() as checkpointer:
         app.state.checkpointer = checkpointer  # InMemorySaver if not configured
 
-For sync usage see :mod:`deerflow.agents.checkpointer.provider`.
+For sync usage see :mod:`unitygrid.agents.checkpointer.provider`.
 """
 
 from __future__ import annotations
@@ -23,13 +23,13 @@ from collections.abc import AsyncIterator
 
 from langgraph.types import Checkpointer
 
-from deerflow.agents.checkpointer.provider import (
+from unitygrid.agents.checkpointer.provider import (
     POSTGRES_CONN_REQUIRED,
     POSTGRES_INSTALL,
     SQLITE_INSTALL,
     _resolve_sqlite_conn_str,
 )
-from deerflow.config.app_config import get_app_config
+from unitygrid.config.app_config import get_app_config
 
 logger = logging.getLogger(__name__)
 

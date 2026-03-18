@@ -9,8 +9,8 @@ import { I18nProvider } from "@/core/i18n/context";
 import { detectLocaleServer } from "@/core/i18n/server";
 
 export const metadata: Metadata = {
-  title: "DeerFlow",
-  description: "A LangChain-based framework for building super agents.",
+  title: "UnityGrid Agent",
+  description: "UnityGrid Agent — Sovereign Intelligence Platform powered by NVIDIA NIM & POP-LL-3.0 Audited Chain",
 };
 
 const geist = Geist({

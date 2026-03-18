@@ -1,12 +1,12 @@
-"""DeerFlowClient — Embedded Python client for DeerFlow agent system.
+"""UnityGridClient — Embedded Python client for UnityGrid agent system.
 
-Provides direct programmatic access to DeerFlow's agent capabilities
+Provides direct programmatic access to UnityGrid's agent capabilities
 without requiring LangGraph Server or Gateway API processes.
 
 Usage:
-    from deerflow.client import DeerFlowClient
+    from unitygrid.client import UnityGridClient
 
-    client = DeerFlowClient()
+    client = UnityGridClient()
     response = client.chat("Analyze this paper for me", thread_id="my-thread")
     print(response)
 
@@ -34,13 +34,13 @@ from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
-from deerflow.agents.lead_agent.agent import _build_middlewares
-from deerflow.agents.lead_agent.prompt import apply_prompt_template
-from deerflow.agents.thread_state import ThreadState
-from deerflow.config.app_config import get_app_config, reload_app_config
-from deerflow.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
-from deerflow.config.paths import get_paths
-from deerflow.models import create_chat_model
+from unitygrid.agents.lead_agent.agent import _build_middlewares
+from unitygrid.agents.lead_agent.prompt import apply_prompt_template
+from unitygrid.agents.thread_state import ThreadState
+from unitygrid.config.app_config import get_app_config, reload_app_config
+from unitygrid.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
+from unitygrid.config.paths import get_paths
+from unitygrid.models import create_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -63,10 +63,10 @@ class StreamEvent:
     data: dict[str, Any] = field(default_factory=dict)
 
 
-class DeerFlowClient:
-    """Embedded Python client for DeerFlow agent system.
+class UnityGridClient:
+    """Embedded Python client for UnityGrid agent system.
 
-    Provides direct programmatic access to DeerFlow's agent capabilities
+    Provides direct programmatic access to UnityGrid's agent capabilities
     without requiring LangGraph Server or Gateway API processes.
 
     Note:
@@ -81,9 +81,9 @@ class DeerFlowClient:
 
     Example::
 
-        from deerflow.client import DeerFlowClient
+        from unitygrid.client import UnityGridClient
 
-        client = DeerFlowClient()
+        client = UnityGridClient()
 
         # Simple one-shot
         print(client.chat("hello"))
@@ -211,7 +211,7 @@ class DeerFlowClient:
         }
         checkpointer = self._checkpointer
         if checkpointer is None:
-            from deerflow.agents.checkpointer import get_checkpointer
+            from unitygrid.agents.checkpointer import get_checkpointer
 
             checkpointer = get_checkpointer()
         if checkpointer is not None:
@@ -224,7 +224,7 @@ class DeerFlowClient:
     @staticmethod
     def _get_tools(*, model_name: str | None, subagent_enabled: bool):
         """Lazy import to avoid circular dependency at module level."""
-        from deerflow.tools import get_available_tools
+        from unitygrid.tools import get_available_tools
 
         return get_available_tools(model_name=model_name, subagent_enabled=subagent_enabled)
 
@@ -422,7 +422,7 @@ class DeerFlowClient:
             Dict with "skills" key containing list of skill info dicts,
             matching the Gateway API ``SkillsListResponse`` schema.
         """
-        from deerflow.skills.loader import load_skills
+        from unitygrid.skills.loader import load_skills
 
         return {
             "skills": [
@@ -443,7 +443,7 @@ class DeerFlowClient:
         Returns:
             Memory data dict (see src/agents/memory/updater.py for structure).
         """
-        from deerflow.agents.memory.updater import get_memory_data
+        from unitygrid.agents.memory.updater import get_memory_data
 
         return get_memory_data()
 
@@ -528,7 +528,7 @@ class DeerFlowClient:
         Returns:
             Skill info dict, or None if not found.
         """
-        from deerflow.skills.loader import load_skills
+        from unitygrid.skills.loader import load_skills
 
         skill = next((s for s in load_skills(enabled_only=False) if s.name == name), None)
         if skill is None:
@@ -555,7 +555,7 @@ class DeerFlowClient:
             ValueError: If the skill is not found.
             OSError: If the config file cannot be written.
         """
-        from deerflow.skills.loader import load_skills
+        from unitygrid.skills.loader import load_skills
 
         skills = load_skills(enabled_only=False)
         skill = next((s for s in skills if s.name == name), None)
@@ -603,8 +603,8 @@ class DeerFlowClient:
             FileNotFoundError: If the file does not exist.
             ValueError: If the file is invalid.
         """
-        from deerflow.skills.loader import get_skills_root_path
-        from deerflow.skills.validation import _validate_skill_frontmatter
+        from unitygrid.skills.loader import get_skills_root_path
+        from unitygrid.skills.validation import _validate_skill_frontmatter
 
         path = Path(skill_path)
         if not path.exists():
@@ -664,7 +664,7 @@ class DeerFlowClient:
         Returns:
             The reloaded memory data dict.
         """
-        from deerflow.agents.memory.updater import reload_memory_data
+        from unitygrid.agents.memory.updater import reload_memory_data
 
         return reload_memory_data()
 
@@ -674,7 +674,7 @@ class DeerFlowClient:
         Returns:
             Memory config dict.
         """
-        from deerflow.config.memory_config import get_memory_config
+        from unitygrid.config.memory_config import get_memory_config
 
         config = get_memory_config()
         return {
@@ -726,7 +726,7 @@ class DeerFlowClient:
             FileNotFoundError: If any file does not exist.
             ValueError: If any supplied path exists but is not a regular file.
         """
-        from deerflow.utils.file_conversion import CONVERTIBLE_EXTENSIONS, convert_file_to_markdown
+        from unitygrid.utils.file_conversion import CONVERTIBLE_EXTENSIONS, convert_file_to_markdown
 
         # Validate all files upfront to avoid partial uploads.
         resolved_files = []

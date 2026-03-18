@@ -6,8 +6,8 @@ from langchain.agents import AgentState
 from langchain.agents.middleware import AgentMiddleware
 from langgraph.runtime import Runtime
 
-from deerflow.config.title_config import get_title_config
-from deerflow.models import create_chat_model
+from unitygrid.config.title_config import get_title_config
+from unitygrid.models import create_chat_model
 
 
 class TitleMiddlewareState(AgentState):

@@ -3,8 +3,8 @@
 import logging
 from dataclasses import replace
 
-from deerflow.subagents.builtins import BUILTIN_SUBAGENTS
-from deerflow.subagents.config import SubagentConfig
+from unitygrid.subagents.builtins import BUILTIN_SUBAGENTS
+from unitygrid.subagents.config import SubagentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def get_subagent_config(name: str) -> SubagentConfig | None:
         return None
 
     # Apply timeout override from config.yaml (lazy import to avoid circular deps)
-    from deerflow.config.subagents_config import get_subagents_app_config
+    from unitygrid.config.subagents_config import get_subagents_app_config
 
     app_config = get_subagents_app_config()
     effective_timeout = app_config.get_timeout_for(name)

@@ -3,7 +3,7 @@ import logging
 
 from agent_sandbox import Sandbox as AioSandboxClient
 
-from deerflow.sandbox.sandbox import Sandbox
+from unitygrid.sandbox.sandbox import Sandbox
 
 logger = logging.getLogger(__name__)
 

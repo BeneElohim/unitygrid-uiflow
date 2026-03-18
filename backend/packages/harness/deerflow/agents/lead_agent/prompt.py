@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from deerflow.config.agents_config import load_agent_soul
-from deerflow.skills import load_skills
+from unitygrid.config.agents_config import load_agent_soul
+from unitygrid.skills import load_skills
 
 
 def _build_subagent_section(max_concurrent: int) -> str:
@@ -278,10 +278,10 @@ Recent breakthroughs in language models have also accelerated progress
 ```markdown
 ## Executive Summary
 
-DeerFlow is an open-source AI agent framework that gained significant traction in early 2026
-[citation:GitHub Repository](https://github.com/bytedance/deer-flow). The project focuses on
+UnityGrid is an open-source AI agent framework that gained significant traction in early 2026
+[citation:GitHub Repository](https://github.com/bytedance/unitygrid). The project focuses on
 providing a production-ready agent system with sandbox execution and memory management
-[citation:DeerFlow Documentation](https://deer-flow.dev/docs).
+[citation:UnityGrid Documentation](https://unitygrid.dev/docs).
 
 ## Key Analysis
 
@@ -293,8 +293,8 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
 ## Sources
 
 ### Primary Sources
-- [GitHub Repository](https://github.com/bytedance/deer-flow) - Official source code and documentation
-- [DeerFlow Documentation](https://deer-flow.dev/docs) - Technical specifications
+- [GitHub Repository](https://github.com/bytedance/unitygrid) - Official source code and documentation
+- [UnityGrid Documentation](https://unitygrid.dev/docs) - Technical specifications
 
 ### Media Coverage
 - [AI Trends 2026](https://techcrunch.com/ai-trends) - Industry analysis
@@ -306,7 +306,7 @@ combined with a FastAPI gateway for REST API access [citation:FastAPI](https://f
 - The `[citation:Title](URL)` format is ONLY for inline citations within the report body
 - ❌ WRONG: `GitHub 仓库 - 官方源代码和文档` (no URL!)
 - ❌ WRONG in Sources: `[citation:GitHub Repository](url)` (citation prefix is for inline only!)
-- ✅ RIGHT in Sources: `[GitHub Repository](https://github.com/bytedance/deer-flow) - 官方源代码和文档`
+- ✅ RIGHT in Sources: `[GitHub Repository](https://github.com/bytedance/unitygrid) - 官方源代码和文档`
 
 **WORKFLOW for Research Tasks:**
 1. Use web_search to find sources → Extract {{title, url, snippet}} from results
@@ -345,8 +345,8 @@ def _get_memory_context(agent_name: str | None = None) -> str:
         Formatted memory context string wrapped in XML tags, or empty string if disabled.
     """
     try:
-        from deerflow.agents.memory import format_memory_for_injection, get_memory_data
-        from deerflow.config.memory_config import get_memory_config
+        from unitygrid.agents.memory import format_memory_for_injection, get_memory_data
+        from unitygrid.config.memory_config import get_memory_config
 
         config = get_memory_config()
         if not config.enabled or not config.injection_enabled:
@@ -376,7 +376,7 @@ def get_skills_prompt_section(available_skills: set[str] | None = None) -> str:
     skills = load_skills(enabled_only=True)
 
     try:
-        from deerflow.config import get_app_config
+        from unitygrid.config import get_app_config
 
         config = get_app_config()
         container_base_path = config.skills.container_path
@@ -426,10 +426,10 @@ def get_deferred_tools_prompt_section() -> str:
     and can use tool_search to load them.
     Returns empty string when tool_search is disabled or no tools are deferred.
     """
-    from deerflow.tools.builtins.tool_search import get_deferred_registry
+    from unitygrid.tools.builtins.tool_search import get_deferred_registry
 
     try:
-        from deerflow.config import get_app_config
+        from unitygrid.config import get_app_config
 
         if not get_app_config().tool_search.enabled:
             return ""
@@ -478,7 +478,7 @@ def apply_prompt_template(subagent_enabled: bool = False, max_concurrent_subagen
 
     # Format the prompt with dynamic skills and memory
     prompt = SYSTEM_PROMPT_TEMPLATE.format(
-        agent_name=agent_name or "DeerFlow 2.0",
+        agent_name=agent_name or "UnityGrid 2.0",
         soul=get_agent_soul(agent_name),
         skills_section=skills_section,
         deferred_tools_section=deferred_tools_section,

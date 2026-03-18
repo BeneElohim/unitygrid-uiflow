@@ -72,8 +72,8 @@ def _build_runtime_middlewares(
     lazy_init: bool = True,
 ) -> list[AgentMiddleware]:
     """Build shared base middlewares for agent execution."""
-    from deerflow.agents.middlewares.thread_data_middleware import ThreadDataMiddleware
-    from deerflow.sandbox.middleware import SandboxMiddleware
+    from unitygrid.agents.middlewares.thread_data_middleware import ThreadDataMiddleware
+    from unitygrid.sandbox.middleware import SandboxMiddleware
 
     middlewares: list[AgentMiddleware] = [
         ThreadDataMiddleware(lazy_init=lazy_init),
@@ -81,12 +81,12 @@ def _build_runtime_middlewares(
     ]
 
     if include_uploads:
-        from deerflow.agents.middlewares.uploads_middleware import UploadsMiddleware
+        from unitygrid.agents.middlewares.uploads_middleware import UploadsMiddleware
 
         middlewares.insert(1, UploadsMiddleware())
 
     if include_dangling_tool_call_patch:
-        from deerflow.agents.middlewares.dangling_tool_call_middleware import DanglingToolCallMiddleware
+        from unitygrid.agents.middlewares.dangling_tool_call_middleware import DanglingToolCallMiddleware
 
         middlewares.append(DanglingToolCallMiddleware())
 

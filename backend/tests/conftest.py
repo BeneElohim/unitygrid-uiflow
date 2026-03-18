@@ -8,19 +8,19 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-# Make 'app' and 'deerflow' importable from any working directory
+# Make 'app' and 'unitygrid' importable from any working directory
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Break the circular import chain that exists in production code:
-#   deerflow.subagents.__init__
+#   unitygrid.subagents.__init__
 #     -> .executor (SubagentExecutor, SubagentResult)
-#       -> deerflow.agents.thread_state
-#         -> deerflow.agents.__init__
+#       -> unitygrid.agents.thread_state
+#         -> unitygrid.agents.__init__
 #           -> lead_agent.agent
 #             -> subagent_limit_middleware
-#               -> deerflow.subagents.executor  <-- circular!
+#               -> unitygrid.subagents.executor  <-- circular!
 #
-# By injecting a mock for deerflow.subagents.executor *before* any test module
+# By injecting a mock for unitygrid.subagents.executor *before* any test module
 # triggers the import, __init__.py's "from .executor import ..." succeeds
 # immediately without running the real executor module.
 _executor_mock = MagicMock()
@@ -30,4 +30,4 @@ _executor_mock.SubagentStatus = MagicMock
 _executor_mock.MAX_CONCURRENT_SUBAGENTS = 3
 _executor_mock.get_background_task_result = MagicMock()
 
-sys.modules["deerflow.subagents.executor"] = _executor_mock
+sys.modules["unitygrid.subagents.executor"] = _executor_mock

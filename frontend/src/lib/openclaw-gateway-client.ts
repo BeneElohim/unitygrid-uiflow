@@ -1,22 +1,83 @@
 /**
- * UnityGrid Agent Flow — OpenClaw Gateway WebSocket Client
- * ──────────────────────────────────────────────────────────
- * Connects to the OpenClaw Gateway via WebSocket (proxied through /gw/ws).
- * Maps Gateway events into the UnityGrid message schema.
+ * UnityGrid Agent Flow — OpenClaw Gateway Client
+ * ────────────────────────────────────────────────
+ * Dual-mode client:
  *
- * Gateway WS methods used:
- *   chat.history  — fetch transcript on connect
- *   chat.send     — send a message (non-blocking, streams via events)
- *   chat.abort    — stop an active run
+ *   1. REST client (getGatewayClient) — for standard HTTP API calls.
+ *      Reads NEXT_PUBLIC_OPENCLAW_BASE from env (default: http://localhost:3333).
+ *      Used by Gateway Settings "List Models" test and future provider-switch logic.
  *
- * Gateway events received:
- *   chat          — token stream / final message
- *   agent         — tool call / agent step events
- *   presence      — connection status
- *   error         — error events
+ *   2. WebSocket client (OpenClawGatewayClient / getGatewayWsClient) — for
+ *      streaming chat via the /gw proxy (ws://localhost:3001).
+ *      Used by the Gateway Chat workspace tab.
  *
- * Auth: token sent as connect.params.auth.token in the first WS message.
+ * Provider routing:
+ *   - NIM is always the sovereign default (PROVIDER_LOCK=NIM in .env.local).
+ *   - OpenClaw/OpenRouter can be enabled via Settings > Gateway > disable NIM lock.
+ *   - The REST client automatically includes the auth token if present.
+ *
+ * Auth:
+ *   - REST: Bearer token from NEXT_PUBLIC_UG_GATEWAY_TOKEN env or localStorage.
+ *   - WS:   token sent as connect.params.auth.token in the first WS frame.
  */
+
+// ── REST Client ───────────────────────────────────────────────────────────────
+
+export interface GatewayRestClient {
+  listModels: () => Promise<unknown>;
+  chat: (body: unknown) => Promise<unknown>;
+  health: () => Promise<unknown>;
+}
+
+/**
+ * Returns a REST client for the OpenClaw Gateway HTTP API.
+ *
+ * Base URL resolution order:
+ *   1. `baseOverride` argument (from Gateway Settings localStorage)
+ *   2. NEXT_PUBLIC_OPENCLAW_BASE env var
+ *   3. Default: http://localhost:3333
+ */
+export function getGatewayClient(opts?: { url?: string }): GatewayRestClient {
+  const base =
+    opts?.url ??
+    (typeof window !== "undefined"
+      ? localStorage.getItem("ug_gateway_url") ?? ""
+      : "") ||
+    process.env.NEXT_PUBLIC_OPENCLAW_BASE ||
+    "http://localhost:3333";
+
+  const token =
+    (typeof window !== "undefined"
+      ? localStorage.getItem("ug_gateway_token") ?? ""
+      : "") ||
+    process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ||
+    "";
+
+  async function req(path: string, init: RequestInit = {}): Promise<unknown> {
+    const headers = new Headers(init.headers as HeadersInit | undefined);
+    if (token) headers.set("authorization", `Bearer ${token}`);
+    headers.set("content-type", "application/json");
+    const res = await fetch(`${base}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`OpenClaw ${path} → HTTP ${res.status}`);
+    return res.json() as Promise<unknown>;
+  }
+
+  return {
+    listModels: () => req("/v1/models"),
+    chat: (body: unknown) =>
+      req("/v1/chat/completions", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    health: () => req("/health"),
+  };
+}
+
+// ── WebSocket Client ──────────────────────────────────────────────────────────
 
 export type GatewayEventType = "chat" | "agent" | "presence" | "error" | "ack";
 
@@ -27,8 +88,8 @@ export interface GatewayEvent {
   delta?: string;        // streaming token
   text?: string;         // final text
   tool?: string;         // tool name (agent events)
-  toolInput?: unknown;   // tool input (agent events)
-  toolOutput?: unknown;  // tool output (agent events)
+  toolInput?: unknown;   // tool input
+  toolOutput?: unknown;  // tool output
   error?: string;
   sessionKey?: string;
 }
@@ -56,18 +117,25 @@ export class OpenClawGatewayClient {
 
   constructor(opts?: {
     gatewayWsUrl?: string;
+    url?: string;          // alias for gatewayWsUrl (REST client compat)
     token?: string;
     sessionKey?: string;
   }) {
-    // Derive WebSocket URL from the /gw proxy path
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const wsOrigin = origin.replace(/^http/, "ws");
     this.gatewayWsUrl =
       opts?.gatewayWsUrl ??
+      opts?.url ??
       (process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_WS_URL
         ? process.env.NEXT_PUBLIC_OPENCLAW_GATEWAY_WS_URL
         : `${wsOrigin}/gw`);
-    this.token = opts?.token ?? process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ?? "";
+    this.token =
+      opts?.token ??
+      (typeof window !== "undefined"
+        ? localStorage.getItem("ug_gateway_token") ?? ""
+        : "") ||
+      process.env.NEXT_PUBLIC_UG_GATEWAY_TOKEN ??
+      "";
     this.sessionKey = opts?.sessionKey ?? DEFAULT_SESSION_KEY;
   }
 
@@ -85,8 +153,7 @@ export class OpenClawGatewayClient {
     this.ws = new WebSocket(wsUrl);
 
     this.ws.onopen = () => {
-      this.reconnectDelay = 2000; // reset backoff
-      // Authenticate: send connect RPC
+      this.reconnectDelay = 2000;
       this._send({
         method: "connect",
         params: {
@@ -94,8 +161,10 @@ export class OpenClawGatewayClient {
           sessionKey: this.sessionKey,
         },
       });
-      // Fetch history
-      this._send({ method: "chat.history", params: { sessionKey: this.sessionKey } });
+      this._send({
+        method: "chat.history",
+        params: { sessionKey: this.sessionKey },
+      });
       this._emit({ type: "presence", status: "connected" });
     };
 
@@ -126,7 +195,8 @@ export class OpenClawGatewayClient {
         text: payload.text,
         sessionKey: payload.sessionKey ?? this.sessionKey,
         idempotencyKey:
-          payload.idempotencyKey ?? `ug-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          payload.idempotencyKey ??
+          `ug-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       },
     });
   }
@@ -140,8 +210,8 @@ export class OpenClawGatewayClient {
   }
 
   /**
-   * Ping the Gateway — resolves true if a WebSocket connection can be
-   * established within `timeoutMs` milliseconds, false otherwise.
+   * Ping — resolves true if a WebSocket connection can be established
+   * within `timeoutMs` milliseconds, false otherwise.
    */
   async ping(timeoutMs = 3000): Promise<boolean> {
     return new Promise((resolve) => {
@@ -149,13 +219,26 @@ export class OpenClawGatewayClient {
       let settled = false;
       const ws = new WebSocket(wsUrl);
       const timer = setTimeout(() => {
-        if (!settled) { settled = true; ws.close(); resolve(false); }
+        if (!settled) {
+          settled = true;
+          ws.close();
+          resolve(false);
+        }
       }, timeoutMs);
       ws.onopen = () => {
-        if (!settled) { settled = true; clearTimeout(timer); ws.close(); resolve(true); }
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          ws.close();
+          resolve(true);
+        }
       };
       ws.onerror = () => {
-        if (!settled) { settled = true; clearTimeout(timer); resolve(false); }
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve(false);
+        }
       };
     });
   }
@@ -216,36 +299,40 @@ export class OpenClawGatewayClient {
       this._emit({
         type: "ack",
         runId: raw.runId as string | undefined,
-        status: (raw.result as Record<string, unknown>)?.status as string | undefined,
+        status: (raw.result as Record<string, unknown>)?.status as
+          | string
+          | undefined,
       });
     }
   }
 
   private _scheduleReconnect(): void {
     this.reconnectTimer = setTimeout(() => {
-      this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+      this.reconnectDelay = Math.min(
+        this.reconnectDelay * 2,
+        this.maxReconnectDelay,
+      );
       this.connect();
     }, this.reconnectDelay);
   }
 }
 
-// ── Singleton factory ────────────────────────────────────────────────────────
-let _instance: OpenClawGatewayClient | null = null;
+// ── WebSocket singleton factory ───────────────────────────────────────────────
+let _wsInstance: OpenClawGatewayClient | null = null;
 
 /**
- * Returns the singleton Gateway client.
+ * Returns the singleton WebSocket Gateway client.
  * Pass `opts` to create a one-off client (e.g., for connection testing);
  * when `opts` is provided the singleton is NOT replaced.
  */
-export function getGatewayClient(
+export function getGatewayWsClient(
   opts?: ConstructorParameters<typeof OpenClawGatewayClient>[0],
 ): OpenClawGatewayClient {
   if (opts) {
-    // One-off instance for testing — does not replace the singleton
     return new OpenClawGatewayClient(opts);
   }
-  if (!_instance) {
-    _instance = new OpenClawGatewayClient();
+  if (!_wsInstance) {
+    _wsInstance = new OpenClawGatewayClient();
   }
-  return _instance;
+  return _wsInstance;
 }

@@ -1,19 +1,30 @@
 /**
  * UnityGrid Agent Flow — Next.js Configuration
  * ─────────────────────────────────────────────
- * Adds reverse proxy rewrites for OpenClaw Gateway:
- *   /control  → http://127.0.0.1:8765/control  (Control UI SPA)
- *   /gw/*     → http://127.0.0.1:8765/*         (Gateway REST + WebSocket)
+ * Reverse proxy rewrites for OpenClaw Gateway:
  *
- * The Gateway runs on :8765 (internal only).
- * The UI runs on :8502 and proxies both routes under the same origin.
+ *   /control/*   → OPENCLAW_GATEWAY_CONTROL_URL  (Control UI SPA)
+ *   /gw/*        → OPENCLAW_GATEWAY_WS_URL       (Gateway WebSocket)
+ *   /gateway/*   → NEXT_PUBLIC_OPENCLAW_BASE     (Gateway REST API)
  *
- * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
+ * Default ports:
+ *   Control UI + WS  → :3001
+ *   REST API         → :3333
+ *
+ * All three can be overridden in .env.local without code changes.
  */
 import "./src/env.js";
 
-const GATEWAY_HOST =
-  process.env.OPENCLAW_GATEWAY_URL ?? "http://127.0.0.1:8765";
+// ── Proxy targets ──────────────────────────────────────────────────────────────
+
+const GATEWAY_CONTROL_URL =
+  process.env.OPENCLAW_GATEWAY_CONTROL_URL ?? "http://127.0.0.1:3001";
+
+const GATEWAY_WS_URL =
+  process.env.OPENCLAW_GATEWAY_WS_URL ?? "http://127.0.0.1:3001";
+
+const GATEWAY_REST_BASE =
+  process.env.NEXT_PUBLIC_OPENCLAW_BASE ?? "http://127.0.0.1:3333";
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -22,19 +33,30 @@ const config = {
   // ── Reverse proxy rewrites ─────────────────────────────────────────────────
   async rewrites() {
     return [
-      // Control UI SPA — proxy all assets and routes under /control
+      // ── Control UI SPA ─────────────────────────────────────────────────────
+      // Proxy all assets and routes under /control to the Gateway Control UI
       {
         source: "/control",
-        destination: `${GATEWAY_HOST}/control`,
+        destination: `${GATEWAY_CONTROL_URL}/control`,
       },
       {
         source: "/control/:path*",
-        destination: `${GATEWAY_HOST}/control/:path*`,
+        destination: `${GATEWAY_CONTROL_URL}/control/:path*`,
       },
-      // Gateway REST + WebSocket — strip /gw prefix
+
+      // ── Gateway WebSocket ──────────────────────────────────────────────────
+      // Strip /gw prefix; WebSocket upgrade is handled by the browser directly
       {
         source: "/gw/:path*",
-        destination: `${GATEWAY_HOST}/:path*`,
+        destination: `${GATEWAY_WS_URL}/:path*`,
+      },
+
+      // ── Gateway REST API ───────────────────────────────────────────────────
+      // /gateway/v1/models → NEXT_PUBLIC_OPENCLAW_BASE/v1/models etc.
+      // Allows the client to call /gateway instead of a cross-origin URL.
+      {
+        source: "/gateway/:path*",
+        destination: `${GATEWAY_REST_BASE}/:path*`,
       },
     ];
   },
@@ -48,6 +70,18 @@ const config = {
         headers: [
           { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
+      {
+        // CORS headers for the Gateway REST proxy
+        source: "/gateway/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
         ],
       },
     ];

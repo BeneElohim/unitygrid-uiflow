@@ -21,7 +21,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
-  getGatewayClient,
+  getGatewayWsClient,
   type GatewayEvent,
 } from "@/lib/openclaw-gateway-client";
 
@@ -55,7 +55,7 @@ export default function GatewayChatPage() {
   // ── Connect to Gateway ───────────────────────────────────────────────────
   useEffect(() => {
     setStatus("connecting");
-    const client = getGatewayClient();
+    const client = getGatewayWsClient();
 
     const unsubscribe = client.on((event: GatewayEvent) => {
       switch (event.type) {
@@ -176,11 +176,11 @@ export default function GatewayChatPage() {
     setInput("");
     streamingIdRef.current = null;
 
-    getGatewayClient().send({ text });
+    getGatewayWsClient().send({ text });
   }, [input, isRunning]);
 
   const handleStop = useCallback(() => {
-    getGatewayClient().abort();
+    getGatewayWsClient().abort();
     setIsRunning(false);
     // Mark current streaming message as aborted
     setMessages((prev) =>

@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { getGatewayClient } from "@/lib/openclaw-gateway-client";
+import { getGatewayClient, getGatewayWsClient } from "@/lib/openclaw-gateway-client";
 
 // ── Storage keys ──────────────────────────────────────────────────────────────
 
@@ -40,7 +40,8 @@ const STORAGE_KEYS = {
 // ── Defaults (mirror .env.local) ──────────────────────────────────────────────
 
 const DEFAULTS = {
-  GATEWAY_URL: "ws://localhost:3001/gw",
+  // REST base URL for HTTP API calls (list models, health, etc.)
+  GATEWAY_URL: "http://localhost:3333",
   GATEWAY_TOKEN: "",
   PROVIDER_LOCK: "NIM",
   PROVIDERS_ENABLED: "NIM",
@@ -97,9 +98,18 @@ export function GatewaySettingsPage() {
   const handleTestConnection = useCallback(async () => {
     setTestStatus("testing");
     try {
-      const client = getGatewayClient({ url: gatewayUrl });
-      const connected = await client.ping(3000);
-      setTestStatus(connected ? "ok" : "fail");
+      // Try REST health check first; fall back to WS ping
+      const restClient = getGatewayClient({ url: gatewayUrl });
+      try {
+        await restClient.health();
+        setTestStatus("ok");
+      } catch {
+        // REST failed — try WebSocket ping (for WS-only gateways)
+        const wsUrl = gatewayUrl.replace(/^http/, "ws");
+        const wsClient = getGatewayWsClient({ gatewayWsUrl: wsUrl });
+        const connected = await wsClient.ping(3000);
+        setTestStatus(connected ? "ok" : "fail");
+      }
     } catch {
       setTestStatus("fail");
     }
